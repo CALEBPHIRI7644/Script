@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Shop Easy</title>
+    <!-- <link rel="stylesheet" href="/css/customer_dashboard.css" />
+    <link rel="stylesheet" href="/css/customer_orders.css" /> -->
+    <link rel="stylesheet" href="/css/final_customer_order.css" />
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">
+        <div class="logo-icon">🛒</div>
+        <span>SHOP EASY</span>
+      </div>
+
+      <nav class="nav">
+        <a href="/customer/dashboard" class="nav-item active">
+          <span class="nav-icon">🏠</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/customer/cart" class="nav-item">
+          <span class="nav-icon">🛒</span>
+          <span>My Cart</span>
+        </a>
+        <a href="/customer/orders" class="nav-item">
+          <span class="nav-icon">📦</span>
+          <span>My Orders</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">⚙️</span>
+          <span>Settings</span>
+        </a>
+      </nav>
+
+      <a href="/logout" class="logout-btn">
+        <span>🚪</span>
+        <span>Logout</span>
+      </a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <h1>📦 My Orders Dashboard</h1>
+        <p>Track and manage all your orders in one place</p>
+      </div>
+
+      <% var totalOrders = orders.length; var pendingOrders = 0; var
+      shippedOrders = 0; var deliveredOrders = 0; var totalSpent = 0; for (var i
+      = 0; i < orders.length; i++) { if (orders[i].status === 'Pending')
+      pendingOrders++; if (orders[i].status === 'Shipped') shippedOrders++; if
+      (orders[i].status === 'Delivered') deliveredOrders++; totalSpent +=
+      parseFloat(orders[i].total || 0); } var circumference = 440; var
+      pendingPercent = totalOrders > 0 ? (pendingOrders / totalOrders) : 0; var
+      shippedPercent = totalOrders > 0 ? (shippedOrders / totalOrders) : 0; var
+      deliveredPercent = totalOrders > 0 ? (deliveredOrders / totalOrders) : 0;
+      var deliveredOffset = circumference * (1 - deliveredPercent); var
+      shippedOffset = circumference * (1 - deliveredPercent - shippedPercent);
+      var pendingOffset = circumference * (1 - deliveredPercent - shippedPercent
+      - pendingPercent); %>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">📊</div>
+          <div class="stat-label">Total Orders</div>
+          <div class="stat-value"><%= totalOrders %></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-label">Pending</div>
+          <div class="stat-value"><%= pendingOrders %></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">✅</div>
+          <div class="stat-label">Delivered</div>
+          <div class="stat-value"><%= deliveredOrders %></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💰</div>
+          <div class="stat-label">Total Spent</div>
+          <div class="stat-value">$<%= totalSpent.toFixed(2) %></div>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="charts-section">
+        <!-- Donut Chart -->
+        <div class="chart-card">
+          <div class="chart-title">🎯 Order Status Distribution</div>
+          <div class="chart">
+            <div class="donut-chart">
+              <div class="donut">
+                <svg width="180" height="180">
+                  <circle
+                    cx="90"
+                    cy="90"
+                    r="70"
+                    fill="none"
+                    stroke="#e2e8f0"
+                    stroke-width="20"
+                  />
+                  <% if (deliveredOrders > 0) { %>
+                  <circle
+                    cx="90"
+                    cy="90"
+                    r="70"
+                    fill="none"
+                    stroke="#10b981"
+                    stroke-width="20"
+                    stroke-dasharray="<%= circumference %>"
+                    stroke-dashoffset="<%= deliveredOffset %>"
+                    stroke-linecap="round"
+                  />
+                  <% } %> <% if (shippedOrders > 0) { %>
+                  <circle
+                    cx="90"
+                    cy="90"
+                    r="70"
+                    fill="none"
+                    stroke="#4facfe"
+                    stroke-width="20"
+                    stroke-dasharray="<%= circumference %>"
+                    stroke-dashoffset="<%= shippedOffset %>"
+                    stroke-linecap="round"
+                  />
+                  <% } %> <% if (pendingOrders > 0) { %>
+                  <circle
+                    cx="90"
+                    cy="90"
+                    r="70"
+                    fill="none"
+                    stroke="#fbbf24"
+                    stroke-width="20"
+                    stroke-dasharray="<%= circumference %>"
+                    stroke-dashoffset="<%= pendingOffset %>"
+                    stroke-linecap="round"
+                  />
+                  <% } %>
+                </svg>
+                <div class="donut-center">
+                  <div class="donut-total"><%= totalOrders %></div>
+                  <div class="donut-label">Orders</div>
+                </div>
+              </div>
+              <div class="donut-legend">
+                <div class="legend-item">
+                  <div class="legend-color" style="background: #10b981"></div>
+                  <div class="legend-text">Delivered</div>
+                  <div class="legend-value"><%= deliveredOrders %></div>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color" style="background: #4facfe"></div>
+                  <div class="legend-text">Shipped</div>
+                  <div class="legend-value"><%= shippedOrders %></div>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color" style="background: #fbbf24"></div>
+                  <div class="legend-text">Pending</div>
+                  <div class="legend-value"><%= pendingOrders %></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Orders Section -->
+      <div class="orders-section">
+        <h2 class="section-title">
+          <% if (orders.length > 0) { %> Recent Orders (<%= orders.length %>) <%
+          } else { %> My Orders <% } %>
+        </h2>
+
+        <% if (message) { %>
+        <div class="message"><%= message %></div>
+        <% } %> <% if (orders.length === 0) { %>
+        <div class="no-orders">
+          <p style="font-size: 3rem; margin-bottom: 1rem">📦</p>
+          <p>No orders found. Start shopping to see your orders here!</p>
+        </div>
+        <% } else { %> <% orders.forEach(order => { %>
+        <div class="order-card">
+          <div class="order-header">
+            <span class="order-id">Order #<%= order.id %></span>
+            <span class="order-status status-<%= order.status.toLowerCase() %>">
+              <%= order.status %>
+            </span>
+            <span class="order-total"
+              >Total: $<%= parseFloat(order.total).toFixed(2) %></span
+            >
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% order.items.forEach(item => { %>
+              <tr>
+                <td><%= item.name %></td>
+                <td><%= item.quantity %></td>
+                <td>$<%= parseFloat(item.price).toFixed(2) %></td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+
+          <% if (order.status === 'Pending') { %>
+          <form
+            action="/customer/orders/cancel"
+            method="POST"
+            style="display: inline"
+          >
+            <input type="hidden" name="order_id" value="<%= order.id %>" />
+            <button type="submit" class="cancel-btn">Cancel Order</button>
+          </form>
+          <% } %>
+        </div>
+        <% }) %> <% } %>
+
+        <!-- Navigation -->
+        <div class="navigation">
+          <a href="/customer/dashboard" class="nav-link">← Back to Dashboard</a>
+          <span class="nav-separator">|</span>
+          <a href="/logout" class="nav-link">Logout →</a>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

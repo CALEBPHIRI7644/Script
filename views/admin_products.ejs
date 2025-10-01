@@ -1,0 +1,20 @@
+<h2>All Products</h2>
+<table border="1">
+  <tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Price</th>
+    <th>Qty</th>
+    <th>Seller</th>
+  </tr>
+  <% products.forEach(p => { %>
+  <tr>
+    <td><%= p.id %></td>
+    <td><%= p.name %></td>
+    <td><%= p.price %></td>
+    <td><%= p.quantity %></td>
+    <td><%= p.seller_email %></td>
+  </tr>
+  <% }) %>
+</table>
+<a href="/logout">Logout</a>

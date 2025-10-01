@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Shop Easy</title>
+    <link rel="stylesheet" href="/css/customer_dashboard.css" />
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">
+        <div class="logo-icon">🛒</div>
+        <span>SHOP EASY</span>
+      </div>
+
+      <nav class="nav">
+        <a href="/customer/dashboard" class="nav-item active">
+          <span class="nav-icon">🏠</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/customer/cart" class="nav-item">
+          <span class="nav-icon">🛒</span>
+          <span>My Cart</span>
+        </a>
+        <a href="/customer/orders" class="nav-item">
+          <span class="nav-icon">📦</span>
+          <span>My Orders</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">⚙️</span>
+          <span>Settings</span>
+        </a>
+      </nav>
+
+      <a href="/logout" class="logout-btn">
+        <span>🚪</span>
+        <span>Logout</span>
+      </a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="header">
+        <h1>Welcome, <%= user.email %>!</h1>
+        <div class="user-info">
+          <div class="notification-icon">🔔</div>
+        </div>
+      </div>
+
+      <div class="page-title">
+        <h2>Available Products</h2>
+        <p style="color: #64748b; margin-top: 0.5rem">
+          Browse and add products to your cart
+        </p>
+      </div>
+
+      <div class="products-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Product Name</th>
+              <th>Price</th>
+              <th>In Stock</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% products.forEach(p => { %>
+            <tr>
+              <td><%= p.name %></td>
+              <td>$<%= p.price %></td>
+              <td><%= p.quantity %> available</td>
+              <td>
+                <form method="POST" action="/customer/cart/add">
+                  <input type="hidden" name="product_id" value="<%= p.id %>" />
+                  <input
+                    type="number"
+                    name="quantity"
+                    min="1"
+                    max="<%= p.quantity %>"
+                    value="1"
+                    required
+                  />
+                  <button type="submit">Add to Cart</button>
+                </form>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

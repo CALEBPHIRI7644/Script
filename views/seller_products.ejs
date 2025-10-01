@@ -1,0 +1,25 @@
+<h2>My Products</h2>
+<form method="POST" action="/seller/products/add">
+  <input type="text" name="name" placeholder="Product Name" required />
+  <input type="number" name="price" placeholder="Price" required />
+  <input type="number" name="quantity" placeholder="Quantity" required />
+  <button type="submit">Add Product</button>
+</form>
+
+<table border="1">
+  <tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Price</th>
+    <th>Qty</th>
+  </tr>
+  <% products.forEach(p => { %>
+  <tr>
+    <td><%= p.id %></td>
+    <td><%= p.name %></td>
+    <td><%= p.price %></td>
+    <td><%= p.quantity %></td>
+  </tr>
+  <% }) %>
+</table>
+<a href="/logout">Logout</a>

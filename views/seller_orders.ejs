@@ -1,0 +1,33 @@
+<h1>Orders for Your Products</h1>
+
+<% orders.forEach(order => { %>
+  <h2>Order #<%= order.id %> | Status: <%= order.status %> | Total: $<%= order.total %></h2>
+  <table border="1" cellpadding="5">
+    <tr>
+      <th>Product</th>
+      <th>Quantity</th>
+      <th>Price</th>
+    </tr>
+    <% order.items.forEach(item => { %>
+      <tr>
+        <td><%= item.name %></td>
+        <td><%= item.quantity %></td>
+        <td>$<%= item.price %></td>
+      </tr>
+    <% }) %>
+  </table>
+
+  <% if(order.status === 'Pending') { %>
+    <form action="/seller/orders/update" method="POST">
+      <input type="hidden" name="order_id" value="<%= order.id %>" />
+      <select name="status">
+        <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+        <option value="Shipped">Shipped</option>
+        <option value="Delivered">Delivered</option>
+      </select>
+      <button type="submit">Update Status</button>
+    </form>
+  <% } %>
+  <hr />
+<% }) %>
+<a href="/seller/dashboard">Back to Dashboard</a>
