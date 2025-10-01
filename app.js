@@ -39,9 +39,38 @@ function requireRole(role) {
 // ROUTES
 
 // Root
-app.get("/", (req, res) => {
-  res.send("Server is running!");
+// Root
+// Add this route near the top of your routes section in app.js, right after the root route
+
+// Landing Page - Public route
+app.get("/", async (req, res) => {
+  try {
+    // Get latest 4 products (sorted by ID descending to get newest)
+    const [latestProducts] = await pool
+      .promise()
+      .query(
+        "SELECT * FROM products WHERE quantity > 0 ORDER BY id DESC LIMIT 4"
+      );
+
+    // Get all products
+    const [allProducts] = await pool
+      .promise()
+      .query("SELECT * FROM products ORDER BY id DESC");
+
+    res.render("landing_page", {
+      latestProducts,
+      allProducts,
+    });
+  } catch (err) {
+    console.error("Error loading landing page:", err);
+    res.send("Error loading page");
+  }
 });
+
+// Keep your existing routes below...
+// app.get("/", (req, res) => {
+//   res.send("Server is running!");
+// });
 
 // Registration with password hashing
 app.get("/register", (req, res) => {

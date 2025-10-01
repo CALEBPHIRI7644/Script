@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SHOP EASY - Home</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: #f8f9fa;
+      }
+
+      /* Header */
+      header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        gap: 0.5rem;
+      }
+
+      .logo-icon {
+        font-size: 2rem;
+      }
+
+      nav ul {
+        display: flex;
+        list-style: none;
+        gap: 2rem;
+      }
+
+      nav a {
+        color: white;
+        text-decoration: none;
+        transition: opacity 0.3s;
+        font-weight: 500;
+      }
+
+      nav a:hover {
+        opacity: 0.8;
+      }
+
+      .user-actions {
+        display: flex;
+        gap: 1rem;
+      }
+
+      .user-icon {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        color: white;
+        transition: background 0.3s;
+        font-size: 1.2rem;
+      }
+
+      .user-icon:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      /* Hero Section */
+      .hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-align: center;
+        padding: 5rem 2rem;
+      }
+
+      .hero h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+      }
+
+      .hero p {
+        font-size: 1.3rem;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+      }
+
+      .hero button {
+        background: white;
+        color: #667eea;
+        padding: 1rem 2.5rem;
+        font-size: 1.1rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: transform 0.3s, box-shadow 0.3s;
+      }
+
+      .hero button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Sections */
+      section {
+        max-width: 1200px;
+        margin: 3rem auto;
+        padding: 0 2rem;
+      }
+
+      .section-title {
+        font-size: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+        color: #2d3748;
+      }
+
+      /* Product Grid */
+      .products-grid,
+      .latest-products {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+      }
+
+      .product-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+      }
+
+      .product-image-container {
+        width: 100%;
+        height: 200px;
+        background: #f7fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .product-image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .product-image-placeholder {
+        font-size: 5rem;
+        color: #cbd5e0;
+      }
+
+      .product-details {
+        padding: 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .product-name {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+      }
+
+      .product-price {
+        font-size: 1.3rem;
+        color: #667eea;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+      }
+
+      .product-stock {
+        font-size: 0.9rem;
+        color: #718096;
+        margin-bottom: 1rem;
+      }
+
+      .stock-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+
+      .in-stock {
+        background: #c6f6d5;
+        color: #22543d;
+      }
+
+      .low-stock {
+        background: #feebc8;
+        color: #7c2d12;
+      }
+
+      .out-of-stock {
+        background: #fed7d7;
+        color: #742a2a;
+      }
+
+      .add-to-cart {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: transform 0.2s;
+        width: 100%;
+        margin-top: auto;
+      }
+
+      .add-to-cart:hover {
+        transform: scale(1.05);
+      }
+
+      .add-to-cart:disabled {
+        background: #cbd5e0;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      /* Footer */
+      footer {
+        background: #2d3748;
+        color: white;
+        padding: 2rem;
+        margin-top: 4rem;
+      }
+
+      .footer-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        text-align: center;
+      }
+
+      .footer-content a {
+        color: white;
+        text-decoration: none;
+        margin: 0 0.5rem;
+      }
+
+      .footer-content a:hover {
+        text-decoration: underline;
+      }
+
+      .social-icons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      .social-icon {
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: transform 0.3s;
+      }
+
+      .social-icon:hover {
+        transform: scale(1.2);
+      }
+
+      .empty-message {
+        text-align: center;
+        padding: 3rem;
+        color: #718096;
+        font-size: 1.2rem;
+      }
+
+      @media (max-width: 768px) {
+        header {
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        nav ul {
+          gap: 1rem;
+        }
+
+        .hero h1 {
+          font-size: 2rem;
+        }
+
+        .hero p {
+          font-size: 1rem;
+        }
+
+        .products-grid,
+        .latest-products {
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header>
+      <div class="logo">
+        <div class="logo-icon">🛒</div>
+        <span>SHOP EASY</span>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="#latest-products">Latest</a></li>
+          <li><a href="#all-products">Shop</a></li>
+          <li><a href="#footer">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="user-actions">
+        <a href="/login" class="user-icon" title="Login">🔐</a>
+        <a href="/register" class="user-icon" title="Register">✨</a>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <div class="hero">
+      <h1>Welcome to SHOP EASY</h1>
+      <p>Your one-stop shop for amazing deals and quality products! 🛍️</p>
+      <button onclick="window.location.href='/register'">
+        Start Shopping Now
+      </button>
+    </div>
+
+    <!-- Latest Products Section -->
+    <section id="latest-products">
+      <h2 class="section-title">Latest Products ✨</h2>
+      <% if (latestProducts && latestProducts.length > 0) { %>
+      <div class="latest-products">
+        <% latestProducts.forEach(product => { %>
+        <div class="product-card">
+          <div class="product-image-container">
+            <% if (product.image) { %>
+            <img
+              src="/images/<%= product.image %>"
+              alt="<%= product.name %>"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+            />
+            <div class="product-image-placeholder" style="display: none">
+              <%= product.name.toLowerCase().includes('phone') ? '📱' :
+              product.name.toLowerCase().includes('laptop') ? '💻' :
+              product.name.toLowerCase().includes('head') ||
+              product.name.toLowerCase().includes('earbud') ? '🎧' :
+              product.name.toLowerCase().includes('watch') ? '⌚' :
+              product.name.toLowerCase().includes('mouse') ||
+              product.name.toLowerCase().includes('keyboard') ? '⌨️' :
+              product.name.toLowerCase().includes('chair') ? '🪑' :
+              product.name.toLowerCase().includes('chip') ||
+              product.name.toLowerCase().includes('banana') ? '🍌' :
+              product.name.toLowerCase().includes('monitor') ? '🖥️' :
+              product.name.toLowerCase().includes('speaker') ? '🔊' :
+              product.name.toLowerCase().includes('drive') ? '💾' :
+              product.name.toLowerCase().includes('tablet') ? '📱' :
+              product.name.toLowerCase().includes('printer') ? '🖨️' :
+              product.name.toLowerCase().includes('lamp') ? '💡' :
+              product.name.toLowerCase().includes('charger') ? '🔌' : '📦' %>
+            </div>
+            <% } else { %>
+            <div class="product-image-placeholder">
+              <%= product.name.toLowerCase().includes('phone') ? '📱' :
+              product.name.toLowerCase().includes('laptop') ? '💻' :
+              product.name.toLowerCase().includes('head') ||
+              product.name.toLowerCase().includes('earbud') ? '🎧' :
+              product.name.toLowerCase().includes('watch') ? '⌚' :
+              product.name.toLowerCase().includes('mouse') ||
+              product.name.toLowerCase().includes('keyboard') ? '⌨️' :
+              product.name.toLowerCase().includes('chair') ? '🪑' :
+              product.name.toLowerCase().includes('chip') ||
+              product.name.toLowerCase().includes('banana') ? '🍌' :
+              product.name.toLowerCase().includes('monitor') ? '🖥️' :
+              product.name.toLowerCase().includes('speaker') ? '🔊' :
+              product.name.toLowerCase().includes('drive') ? '💾' :
+              product.name.toLowerCase().includes('tablet') ? '📱' :
+              product.name.toLowerCase().includes('printer') ? '🖨️' :
+              product.name.toLowerCase().includes('lamp') ? '💡' :
+              product.name.toLowerCase().includes('charger') ? '🔌' : '📦' %>
+            </div>
+            <% } %>
+          </div>
+          <div class="product-details">
+            <div class="product-name"><%= product.name %></div>
+            <div class="product-price">
+              MK <%= product.price.toLocaleString() %>
+            </div>
+            <div class="product-stock">
+              <% if (product.quantity > 20) { %>
+              <span class="stock-badge in-stock"
+                >✓ In Stock (<%= product.quantity %>)</span
+              >
+              <% } else if (product.quantity > 0) { %>
+              <span class="stock-badge low-stock"
+                >⚠ Low Stock (<%= product.quantity %>)</span
+              >
+              <% } else { %>
+              <span class="stock-badge out-of-stock">✗ Out of Stock</span>
+              <% } %>
+            </div>
+            <% if (product.quantity > 0) { %>
+            <button
+              class="add-to-cart"
+              onclick="window.location.href='/register'"
+            >
+              🛒 Add to Cart
+            </button>
+            <% } else { %>
+            <button class="add-to-cart" disabled>Out of Stock</button>
+            <% } %>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+      <% } else { %>
+      <div class="empty-message">
+        No products available at the moment. Check back soon!
+      </div>
+      <% } %>
+    </section>
+
+    <!-- All Products Section -->
+    <section id="all-products">
+      <h2 class="section-title">All Available Products 📦</h2>
+      <% if (allProducts && allProducts.length > 0) { %>
+      <div class="products-grid">
+        <% allProducts.forEach(product => { %>
+        <div class="product-card">
+          <div class="product-image-container">
+            <% if (product.image) { %>
+            <img
+              src="/images/<%= product.image %>"
+              alt="<%= product.name %>"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+            />
+            <div class="product-image-placeholder" style="display: none">
+              <%= product.name.toLowerCase().includes('phone') ? '📱' :
+              product.name.toLowerCase().includes('laptop') ? '💻' :
+              product.name.toLowerCase().includes('head') ||
+              product.name.toLowerCase().includes('earbud') ? '🎧' :
+              product.name.toLowerCase().includes('watch') ? '⌚' :
+              product.name.toLowerCase().includes('mouse') ||
+              product.name.toLowerCase().includes('keyboard') ? '⌨️' :
+              product.name.toLowerCase().includes('chair') ? '🪑' :
+              product.name.toLowerCase().includes('chip') ||
+              product.name.toLowerCase().includes('banana') ? '🍌' :
+              product.name.toLowerCase().includes('monitor') ? '🖥️' :
+              product.name.toLowerCase().includes('speaker') ? '🔊' :
+              product.name.toLowerCase().includes('drive') ? '💾' :
+              product.name.toLowerCase().includes('tablet') ? '📱' :
+              product.name.toLowerCase().includes('printer') ? '🖨️' :
+              product.name.toLowerCase().includes('lamp') ? '💡' :
+              product.name.toLowerCase().includes('charger') ? '🔌' : '📦' %>
+            </div>
+            <% } else { %>
+            <div class="product-image-placeholder">
+              <%= product.name.toLowerCase().includes('phone') ? '📱' :
+              product.name.toLowerCase().includes('laptop') ? '💻' :
+              product.name.toLowerCase().includes('head') ||
+              product.name.toLowerCase().includes('earbud') ? '🎧' :
+              product.name.toLowerCase().includes('watch') ? '⌚' :
+              product.name.toLowerCase().includes('mouse') ||
+              product.name.toLowerCase().includes('keyboard') ? '⌨️' :
+              product.name.toLowerCase().includes('chair') ? '🪑' :
+              product.name.toLowerCase().includes('chip') ||
+              product.name.toLowerCase().includes('banana') ? '🍌' :
+              product.name.toLowerCase().includes('monitor') ? '🖥️' :
+              product.name.toLowerCase().includes('speaker') ? '🔊' :
+              product.name.toLowerCase().includes('drive') ? '💾' :
+              product.name.toLowerCase().includes('tablet') ? '📱' :
+              product.name.toLowerCase().includes('printer') ? '🖨️' :
+              product.name.toLowerCase().includes('lamp') ? '💡' :
+              product.name.toLowerCase().includes('charger') ? '🔌' : '📦' %>
+            </div>
+            <% } %>
+          </div>
+          <div class="product-details">
+            <div class="product-name"><%= product.name %></div>
+            <div class="product-price">
+              MK <%= product.price.toLocaleString() %>
+            </div>
+            <div class="product-stock">
+              <% if (product.quantity > 20) { %>
+              <span class="stock-badge in-stock"
+                >✓ In Stock (<%= product.quantity %>)</span
+              >
+              <% } else if (product.quantity > 0) { %>
+              <span class="stock-badge low-stock"
+                >⚠ Low Stock (<%= product.quantity %>)</span
+              >
+              <% } else { %>
+              <span class="stock-badge out-of-stock">✗ Out of Stock</span>
+              <% } %>
+            </div>
+            <% if (product.quantity > 0) { %>
+            <button
+              class="add-to-cart"
+              onclick="window.location.href='/register'"
+            >
+              🛒 Add to Cart
+            </button>
+            <% } else { %>
+            <button class="add-to-cart" disabled>Out of Stock</button>
+            <% } %>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+      <% } else { %>
+      <div class="empty-message">
+        No products available at the moment. Check back soon!
+      </div>
+      <% } %>
+    </section>
+
+    <!-- Footer -->
+    <footer id="footer">
+      <div class="footer-content">
+        <p>&copy; 2025 SHOP EASY. All rights reserved.</p>
+        <div style="margin: 1rem 0">
+          <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a> |
+          <a href="#">Contact Us</a>
+        </div>
+        <div class="social-icons">
+          <div class="social-icon" title="Phone">📱</div>
+          <div class="social-icon" title="Email">📧</div>
+          <div class="social-icon" title="Website">🌐</div>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
