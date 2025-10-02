@@ -128,9 +128,7 @@ app.get("/logout", (req, res) => {
   res.redirect("/login");
 });
 
-// ============================================
 // ADMIN ROUTES
-// ============================================
 
 app.get("/admin/dashboard", requireRole("admin"), (req, res) => {
   res.render("admin_dashboard", { user: req.session.user });
@@ -205,9 +203,7 @@ app.post(
   }
 );
 
-// ============================================
 // SELLER ROUTES
-// ============================================
 
 app.get("/seller/dashboard", requireRole("seller"), (req, res) => {
   res.render("seller_dashboard", { user: req.session.user });
@@ -291,10 +287,6 @@ app.get("/seller/orders", requireRole("seller"), (req, res) => {
     }
   );
 });
-
-// ============================================
-// CUSTOMER ROUTES
-// ============================================
 
 // Customer Dashboard - CORRECTED WITH ALL REQUIRED VARIABLES
 app.get("/customer/dashboard", requireRole("customer"), async (req, res) => {
