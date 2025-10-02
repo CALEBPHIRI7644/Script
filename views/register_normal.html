@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login</title>
+    <title>Register</title>
     <style>
       * {
         margin: 0;
@@ -21,7 +21,7 @@
         padding: 20px;
       }
 
-      .login-container {
+      .register-container {
         background: #fff;
         padding: 50px 40px;
         border-radius: 16px;
@@ -62,8 +62,10 @@
         font-size: 0.95rem;
       }
 
+      input[type="text"],
       input[type="email"],
-      input[type="password"] {
+      input[type="password"],
+      select {
         width: 100%;
         padding: 15px 18px;
         border: 2px solid #e0e0e0;
@@ -74,8 +76,10 @@
         background: #fafafa;
       }
 
+      input[type="text"]:focus,
       input[type="email"]:focus,
-      input[type="password"]:focus {
+      input[type="password"]:focus,
+      select:focus {
         outline: none;
         border-color: #667eea;
         background: #fff;
@@ -86,7 +90,20 @@
         color: #999;
       }
 
-      .login-btn {
+      select {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 15px center;
+        padding-right: 45px;
+      }
+
+      select option {
+        padding: 10px;
+      }
+
+      .register-btn {
         width: 100%;
         padding: 16px;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -102,16 +119,16 @@
         letter-spacing: 0.5px;
       }
 
-      .login-btn:hover {
+      .register-btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
       }
 
-      .login-btn:active {
+      .register-btn:active {
         transform: translateY(0);
       }
 
-      .register-link {
+      .login-link {
         display: block;
         text-align: center;
         margin-top: 25px;
@@ -121,14 +138,14 @@
         font-size: 0.95rem;
       }
 
-      .register-link a {
+      .login-link a {
         color: #667eea;
         text-decoration: none;
         font-weight: 600;
         transition: color 0.3s ease;
       }
 
-      .register-link a:hover {
+      .login-link a:hover {
         color: #764ba2;
         text-decoration: underline;
       }
@@ -151,8 +168,18 @@
         margin-bottom: 10px;
       }
 
+      .role-info {
+        background: #f0f4ff;
+        border-left: 4px solid #667eea;
+        padding: 12px 15px;
+        margin-top: 8px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        color: #555;
+      }
+
       @media (max-width: 480px) {
-        .login-container {
+        .register-container {
           padding: 40px 25px;
         }
 
@@ -163,14 +190,23 @@
     </style>
   </head>
   <body>
-    <div class="login-container">
+    <div class="register-container">
       <div class="icon-wrapper">
-        <div class="icon">🔐</div>
+        <div class="icon">✨</div>
       </div>
 
-      <h2>Login</h2>
+      <h2>Register</h2>
 
-      <form method="POST" action="/login">
+      <form method="POST" action="/register">
+        <div class="form-group">
+          <input
+            type="text"
+            name="name"
+            placeholder="Enter your full name"
+            required
+          />
+        </div>
+
         <div class="form-group">
           <input
             type="email"
@@ -184,16 +220,19 @@
           <input
             type="password"
             name="password"
-            placeholder="Enter your password"
+            placeholder="Create a password"
             required
           />
         </div>
 
-        <button type="submit" class="login-btn">Login</button>
+        <!-- Hidden field to automatically set role as customer -->
+        <input type="hidden" name="role" value="customer" />
+
+        <button type="submit" class="register-btn">Create Account</button>
       </form>
 
-      <div class="register-link">
-        Don't have an account? <a href="/register1">Register here</a>
+      <div class="login-link">
+        Already have an account? <a href="/login">Login here</a>
       </div>
     </div>
   </body>

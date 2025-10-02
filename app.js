@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const mysql2 = require("mysql2");
 const session = require("express-session");
-const bcrypt = require("bcrypt"); // Add bcrypt for password hashing
+const bcrypt = require("bcrypt");
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
@@ -22,7 +22,7 @@ app.use(
   session({
     secret: "supersecretkey",
     resave: false,
-    saveUninitialized: false, // Changed to false for security
+    saveUninitialized: false,
   })
 );
 
@@ -38,21 +38,15 @@ function requireRole(role) {
 
 // ROUTES
 
-// Root
-// Root
-// Add this route near the top of your routes section in app.js, right after the root route
-
 // Landing Page - Public route
 app.get("/", async (req, res) => {
   try {
-    // Get latest 4 products (sorted by ID descending to get newest)
     const [latestProducts] = await pool
       .promise()
       .query(
         "SELECT * FROM products WHERE quantity > 0 ORDER BY id DESC LIMIT 4"
       );
 
-    // Get all products
     const [allProducts] = await pool
       .promise()
       .query("SELECT * FROM products ORDER BY id DESC");
@@ -67,19 +61,18 @@ app.get("/", async (req, res) => {
   }
 });
 
-// Keep your existing routes below...
-// app.get("/", (req, res) => {
-//   res.send("Server is running!");
-// });
-
-// Registration with password hashing
-app.get("/register", (req, res) => {
-  res.render("register");
+// Registration
+app.get("/register1", (req, res) => {
+  res.render("register1");
 });
 
-//Register part
 app.post("/register", async (req, res) => {
-  const { email, password, role } = req.body; // include role from form
+  const { name, email, password, role } = req.body;
+
+  if (!name || !email || !password || !role) {
+    return res.send("All fields are required");
+  }
+
   try {
     const [results] = await pool
       .promise()
@@ -87,14 +80,16 @@ app.post("/register", async (req, res) => {
     if (results.length) return res.send("Email already registered");
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    await pool.promise().query(
-      "INSERT INTO users (email, password, role) VALUES (?, ?, ?)",
-      [email, hashedPassword, role] // use the selected role
-    );
+    await pool
+      .promise()
+      .query(
+        "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
+        [name, email, hashedPassword, role]
+      );
     res.redirect("/login");
   } catch (err) {
     console.error("Insert error:", err);
-    res.send("Error registering user");
+    res.send("Error registering user: " + err.message);
   }
 });
 
@@ -102,6 +97,7 @@ app.post("/register", async (req, res) => {
 app.get("/login", (req, res) => {
   res.render("login");
 });
+
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -132,37 +128,54 @@ app.get("/logout", (req, res) => {
   res.redirect("/login");
 });
 
-// ADMIN DASHBOARD
+// ============================================
+// ADMIN ROUTES
+// ============================================
+
 app.get("/admin/dashboard", requireRole("admin"), (req, res) => {
-  res.render("admin_dashboard");
+  res.render("admin_dashboard", { user: req.session.user });
 });
+
 app.get("/admin/products", requireRole("admin"), (req, res) => {
   pool.query(
-    "SELECT p.*, u.email AS seller_email FROM products p LEFT JOIN users u ON p.seller_id=u.id",
+    `SELECT p.*, 
+            u.email AS seller_email,
+            u.name AS seller_name
+     FROM products p 
+     LEFT JOIN users u ON p.seller_id=u.id`,
     (err, results) => {
       if (err) return res.send("Error fetching products");
-      res.render("admin_products", { products: results });
+      res.render("admin_products", {
+        products: results,
+        user: req.session.user,
+      });
     }
   );
 });
+
 app.get("/admin/orders", requireRole("admin"), (req, res) => {
   pool.query("SELECT * FROM orders", (err, results) => {
     if (err) return res.send("Error fetching orders");
-    res.render("admin_orders", { orders: results });
+    res.render("admin_orders", {
+      orders: results,
+      user: req.session.user,
+    });
   });
 });
 
-// Admin Add Product page
+// Admin Add Product GET
 app.get(
   "/admin/products/admin_add_product",
   requireRole("admin"),
   async (req, res) => {
     try {
-      // Get all users to allow selecting a seller
       const [users] = await pool
         .promise()
-        .query("SELECT id, email, role FROM users");
-      res.render("admin_add_product", { users }); // render EJS view
+        .query("SELECT id, name, email, role FROM users");
+      res.render("admin_add_product", {
+        users,
+        user: req.session.user,
+      });
     } catch (err) {
       console.error(err);
       res.send("Error loading users");
@@ -170,56 +183,421 @@ app.get(
   }
 );
 
-// SELLER DASHBOARD
+// Admin Add Product POST
+app.post(
+  "/admin/products/admin_add_product",
+  requireRole("admin"),
+  (req, res) => {
+    const { name, price, quantity, seller_id, image } = req.body;
+
+    if (!name || !price || !quantity || !seller_id) {
+      return res.send("Name, price, quantity, and seller are required");
+    }
+
+    pool.query(
+      "INSERT INTO products (name, price, quantity, seller_id, image) VALUES (?, ?, ?, ?, ?)",
+      [name, price, quantity, seller_id, image || null],
+      (err) => {
+        if (err) return res.send("Error adding product: " + err.message);
+        res.redirect("/admin/products");
+      }
+    );
+  }
+);
+
+// ============================================
+// SELLER ROUTES
+// ============================================
+
 app.get("/seller/dashboard", requireRole("seller"), (req, res) => {
-  res.render("seller_dashboard");
+  res.render("seller_dashboard", { user: req.session.user });
 });
+
 app.get("/seller/products", requireRole("seller"), (req, res) => {
   pool.query(
     "SELECT * FROM products WHERE seller_id=?",
     [req.session.user.id],
     (err, results) => {
       if (err) return res.send("Error fetching products");
-      res.render("seller_products", { products: results });
+      res.render("seller_products", {
+        products: results,
+        user: req.session.user,
+      });
     }
   );
 });
 
-//admin adding a product
-app.post(
-  "/admin/products/admin_add_product",
-  requireRole("admin"),
-  (req, res) => {
-    const { name, price, quantity, seller_id } = req.body;
+// Seller Add Product GET
+app.get("/seller/products/add", requireRole("seller"), (req, res) => {
+  res.render("seller_add_product", { user: req.session.user });
+});
 
-    pool.query(
-      "INSERT INTO products (name, price, quantity, seller_id) VALUES (?, ?, ?, ?)",
-      [name, price, quantity, seller_id],
-      (err) => {
-        if (err) return res.send("Error adding product: " + err.message);
-        res.redirect("/admin/products"); // Redirect to the products list
-      }
-    );
+// Seller Add Product POST
+app.post("/seller/products/add", requireRole("seller"), (req, res) => {
+  const { name, price, quantity, image } = req.body;
+  const seller_id = req.session.user.id;
+
+  if (!name || !price || !quantity) {
+    return res.send("Name, price, and quantity are required");
   }
-);
-//admin add product then its get method
-app.get(
-  "/admin/products/admin_add_product",
-  requireRole("admin"),
+
+  pool.query(
+    "INSERT INTO products (name, price, quantity, seller_id, image) VALUES (?, ?, ?, ?, ?)",
+    [name, price, quantity, seller_id, image || null],
+    (err) => {
+      if (err) return res.send("Error adding product: " + err.message);
+      res.redirect("/seller/products");
+    }
+  );
+});
+
+// Seller Orders
+app.get("/seller/orders", requireRole("seller"), (req, res) => {
+  const sellerId = req.session.user.id;
+
+  pool.query(
+    `SELECT o.id AS order_id, o.total, o.status, 
+            oi.product_id, oi.quantity, oi.price, p.name
+     FROM orders o
+     JOIN order_items oi ON o.id = oi.order_id
+     JOIN products p ON oi.product_id = p.id
+     WHERE p.seller_id = ?`,
+    [sellerId],
+    (err, results) => {
+      if (err) return res.send("Error fetching orders: " + err.message);
+
+      const orders = {};
+      results.forEach((row) => {
+        if (!orders[row.order_id]) {
+          orders[row.order_id] = {
+            id: row.order_id,
+            total: row.total,
+            status: row.status,
+            items: [],
+          };
+        }
+        orders[row.order_id].items.push({
+          product_id: row.product_id,
+          name: row.name,
+          quantity: row.quantity,
+          price: row.price,
+        });
+      });
+
+      res.render("seller_orders", {
+        orders: Object.values(orders),
+        user: req.session.user,
+      });
+    }
+  );
+});
+
+// ============================================
+// CUSTOMER ROUTES
+// ============================================
+
+// Customer Dashboard - CORRECTED WITH ALL REQUIRED VARIABLES
+app.get("/customer/dashboard", requireRole("customer"), async (req, res) => {
+  try {
+    const customerId = req.session.user.id;
+
+    // Get order statistics
+    const [orders] = await pool
+      .promise()
+      .query("SELECT * FROM orders WHERE customer_id = ?", [customerId]);
+
+    const totalOrders = orders.length;
+    const pendingOrders = orders.filter((o) => o.status === "Pending").length;
+    const deliveredOrders = orders.filter(
+      (o) => o.status === "Delivered"
+    ).length;
+    const totalSpent = orders.reduce(
+      (sum, order) => sum + parseFloat(order.total),
+      0
+    );
+
+    // Get some featured products
+    const [products] = await pool
+      .promise()
+      .query("SELECT * FROM products WHERE quantity > 0 LIMIT 8");
+
+    // Check for saved cart
+    const [savedCart] = await pool
+      .promise()
+      .query("SELECT * FROM saved_carts WHERE customer_id = ?", [customerId]);
+
+    res.render("customer_dashboard", {
+      user: req.session.user,
+      totalOrders,
+      pendingOrders,
+      deliveredOrders,
+      totalSpent,
+      products,
+      hasSavedCart: savedCart.length > 0,
+      currentPage: "dashboard",
+      // ADDED THESE MISSING VARIABLES:
+      searchQuery: "",
+      sortBy: "newest",
+      minPrice: "",
+      maxPrice: "",
+    });
+  } catch (err) {
+    console.error("Error loading dashboard:", err);
+    res.send("Error loading dashboard: " + err.message);
+  }
+});
+
+// Browse Products with Search and Filters
+app.get("/customer/browse", requireRole("customer"), async (req, res) => {
+  try {
+    const searchQuery = req.query.search || "";
+    const sortBy = req.query.sort || "newest";
+    const minPrice = parseFloat(req.query.min_price) || 0;
+    const maxPrice = parseFloat(req.query.max_price) || 999999;
+
+    let query = "SELECT * FROM products WHERE quantity > 0";
+    const params = [];
+
+    if (searchQuery) {
+      query += " AND name LIKE ?";
+      params.push(`%${searchQuery}%`);
+    }
+
+    query += " AND price >= ? AND price <= ?";
+    params.push(minPrice, maxPrice);
+
+    switch (sortBy) {
+      case "price_low":
+        query += " ORDER BY price ASC";
+        break;
+      case "price_high":
+        query += " ORDER BY price DESC";
+        break;
+      case "name":
+        query += " ORDER BY name ASC";
+        break;
+      case "newest":
+      default:
+        query += " ORDER BY id DESC";
+        break;
+    }
+
+    const [products] = await pool.promise().query(query, params);
+
+    const [savedCart] = await pool
+      .promise()
+      .query("SELECT * FROM saved_carts WHERE customer_id = ?", [
+        req.session.user.id,
+      ]);
+
+    res.render("customer_browse", {
+      products,
+      searchQuery,
+      sortBy,
+      minPrice: minPrice || "",
+      maxPrice: maxPrice === 999999 ? "" : maxPrice,
+      user: req.session.user,
+      hasSavedCart: savedCart.length > 0,
+      currentPage: "browse",
+    });
+  } catch (err) {
+    console.error("Error browsing products:", err);
+    res.send("Error loading products: " + err.message);
+  }
+});
+
+// Quick search API endpoint (for autocomplete)
+app.get("/api/search", requireRole("customer"), async (req, res) => {
+  try {
+    const query = req.query.q || "";
+    if (query.length < 2) {
+      return res.json([]);
+    }
+
+    const [results] = await pool
+      .promise()
+      .query(
+        "SELECT id, name, price FROM products WHERE name LIKE ? AND quantity > 0 LIMIT 10",
+        [`%${query}%`]
+      );
+
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: "Search failed" });
+  }
+});
+
+// Customer Cart
+app.get("/customer/cart", requireRole("customer"), async (req, res) => {
+  const message = req.query.message || null;
+
+  try {
+    const [savedCart] = await pool
+      .promise()
+      .query("SELECT * FROM saved_carts WHERE customer_id = ?", [
+        req.session.user.id,
+      ]);
+
+    if (!req.session.cart || req.session.cart.length === 0) {
+      return res.render("customer_cart", {
+        products: [],
+        message: message || "Cart is empty",
+        user: req.session.user,
+        hasSavedCart: savedCart.length > 0,
+        currentPage: "cart",
+      });
+    }
+
+    const ids = req.session.cart.map((item) => item.product_id);
+    const [products] = await pool
+      .promise()
+      .query(`SELECT * FROM products WHERE id IN (${ids.join(",")})`);
+
+    const cartProducts = products.map((prod) => {
+      const item = req.session.cart.find((i) => i.product_id === prod.id);
+      return { ...prod, quantity_in_cart: item.quantity };
+    });
+
+    res.render("customer_cart", {
+      products: cartProducts,
+      message,
+      user: req.session.user,
+      hasSavedCart: savedCart.length > 0,
+      currentPage: "cart",
+    });
+  } catch (err) {
+    res.send("Error loading cart: " + err.message);
+  }
+});
+
+// Save current cart to database
+app.post("/customer/cart/save", requireRole("customer"), async (req, res) => {
+  if (!req.session.cart || req.session.cart.length === 0) {
+    return res.redirect("/customer/cart?message=Cart is empty");
+  }
+
+  try {
+    const customerId = req.session.user.id;
+    const cartData = JSON.stringify(req.session.cart);
+
+    const [existing] = await pool
+      .promise()
+      .query("SELECT * FROM saved_carts WHERE customer_id = ?", [customerId]);
+
+    if (existing.length > 0) {
+      await pool
+        .promise()
+        .query(
+          "UPDATE saved_carts SET cart_data = ?, updated_at = NOW() WHERE customer_id = ?",
+          [cartData, customerId]
+        );
+    } else {
+      await pool
+        .promise()
+        .query(
+          "INSERT INTO saved_carts (customer_id, cart_data) VALUES (?, ?)",
+          [customerId, cartData]
+        );
+    }
+
+    res.redirect("/customer/cart?message=Cart saved successfully");
+  } catch (err) {
+    console.error("Error saving cart:", err);
+    res.send("Error saving cart: " + err.message);
+  }
+});
+
+// Load saved cart
+app.post("/customer/cart/load", requireRole("customer"), async (req, res) => {
+  try {
+    const customerId = req.session.user.id;
+
+    const [results] = await pool
+      .promise()
+      .query("SELECT cart_data FROM saved_carts WHERE customer_id = ?", [
+        customerId,
+      ]);
+
+    if (results.length === 0) {
+      return res.redirect("/customer/cart?message=No saved cart found");
+    }
+
+    req.session.cart = JSON.parse(results[0].cart_data);
+    res.redirect("/customer/cart?message=Cart loaded successfully");
+  } catch (err) {
+    console.error("Error loading cart:", err);
+    res.send("Error loading cart: " + err.message);
+  }
+});
+
+// Delete saved cart
+app.post(
+  "/customer/cart/delete-saved",
+  requireRole("customer"),
   async (req, res) => {
     try {
-      const [users] = await pool
+      const customerId = req.session.user.id;
+
+      await pool
         .promise()
-        .query("SELECT id, email, role FROM users");
-      res.render("admin_add_product", { users }); // must pass { users }
+        .query("DELETE FROM saved_carts WHERE customer_id = ?", [customerId]);
+
+      res.redirect("/customer/cart?message=Saved cart deleted");
     } catch (err) {
-      console.error(err);
-      res.send("Error loading users");
+      console.error("Error deleting saved cart:", err);
+      res.send("Error deleting saved cart: " + err.message);
     }
   }
 );
-//Cart implementation
-// CUSTOMER CHECKOUT
+
+// Add to Cart
+app.post("/customer/cart/add", requireRole("customer"), (req, res) => {
+  const { product_id, quantity } = req.body;
+  if (!req.session.cart) req.session.cart = [];
+
+  const existsIndex = req.session.cart.findIndex(
+    (item) => item.product_id == product_id
+  );
+
+  if (existsIndex >= 0) {
+    req.session.cart[existsIndex].quantity += parseInt(quantity);
+  } else {
+    req.session.cart.push({
+      product_id: parseInt(product_id),
+      quantity: parseInt(quantity),
+    });
+  }
+  res.redirect("/customer/cart");
+});
+
+// Remove from Cart
+app.post("/customer/cart/remove", requireRole("customer"), (req, res) => {
+  const { product_id } = req.body;
+  if (!req.session.cart) req.session.cart = [];
+
+  req.session.cart = req.session.cart.filter(
+    (item) => item.product_id != product_id
+  );
+
+  res.redirect("/customer/cart");
+});
+
+// Update Cart Quantity
+app.post("/customer/cart/update", requireRole("customer"), (req, res) => {
+  const { product_id, quantity } = req.body;
+  if (!req.session.cart) req.session.cart = [];
+
+  const itemIndex = req.session.cart.findIndex(
+    (item) => item.product_id == product_id
+  );
+  if (itemIndex >= 0) {
+    req.session.cart[itemIndex].quantity = parseInt(quantity);
+  }
+
+  res.redirect("/customer/cart");
+});
+
+// Checkout
 app.post(
   "/customer/cart/checkout",
   requireRole("customer"),
@@ -228,7 +606,7 @@ app.post(
       return res.send("Cart is empty");
     }
 
-    const connection = await pool.promise().getConnection(); // get a connection
+    const connection = await pool.promise().getConnection();
     try {
       await connection.beginTransaction();
 
@@ -248,13 +626,11 @@ app.post(
         totalPrice += productRows[0].price * item.quantity;
       }
 
-      // Insert order first
       const [orderResult] = await connection.query(
         "INSERT INTO orders (customer_id, total, status) VALUES (?, ?, ?)",
         [req.session.user.id, totalPrice, "Pending"]
       );
 
-      // Insert each product into order_items and update stock
       for (const item of req.session.cart) {
         const [productRows] = await connection.query(
           "SELECT * FROM products WHERE id = ?",
@@ -289,29 +665,10 @@ app.post(
   }
 );
 
-app.get("/seller/orders", requireRole("seller"), (req, res) => {
-  pool.query(
-    "SELECT o.*, p.name FROM orders o JOIN products p ON o.product_id = p.id WHERE p.seller_id = ?",
-    [req.session.user.id],
-    (err, results) => {
-      if (err) return res.send("Error fetching orders");
-      res.render("seller_orders", { orders: results }); // Assuming a new seller_orders.ejs
-    }
-  );
-});
-
-// CUSTOMER DASHBOARD
-app.get("/customer/dashboard", requireRole("customer"), (req, res) => {
-  pool.query("SELECT * FROM products WHERE quantity > 0", (err, products) => {
-    if (err) return res.send("Error loading products");
-    res.render("customer_dashboard", { products, user: req.session.user });
-  });
-});
-
-// CUSTOMER ORDERS
+// Customer Orders
 app.get("/customer/orders", requireRole("customer"), (req, res) => {
   const customerId = req.session.user.id;
-  const message = req.query.message || null; // get success/error message
+  const message = req.query.message || null;
 
   pool.query(
     `SELECT o.id AS order_id, o.total, o.status, 
@@ -324,7 +681,6 @@ app.get("/customer/orders", requireRole("customer"), (req, res) => {
     (err, results) => {
       if (err) return res.send("Error fetching orders: " + err.message);
 
-      // Group order items under their order
       const orders = {};
       results.forEach((row) => {
         if (!orders[row.order_id]) {
@@ -343,57 +699,31 @@ app.get("/customer/orders", requireRole("customer"), (req, res) => {
         });
       });
 
-      // Pass grouped orders to EJS
       res.render("customer_orders", {
         orders: Object.values(orders),
         message,
+        user: req.session.user,
+        currentPage: "orders",
       });
     }
   );
 });
-//to delete for a customer like orders
-app.post("/customer/cart/remove", requireRole("customer"), (req, res) => {
-  const { product_id } = req.body;
-  if (!req.session.cart) req.session.cart = [];
 
-  req.session.cart = req.session.cart.filter(
-    (item) => item.product_id != product_id
-  );
-
-  res.redirect("/customer/cart");
-});
-//Update quantity of a cart item
-app.post("/customer/cart/update", requireRole("customer"), (req, res) => {
-  const { product_id, quantity } = req.body;
-  if (!req.session.cart) req.session.cart = [];
-
-  const itemIndex = req.session.cart.findIndex(
-    (item) => item.product_id == product_id
-  );
-  if (itemIndex >= 0) {
-    req.session.cart[itemIndex].quantity = parseInt(quantity);
-  }
-
-  res.redirect("/customer/cart");
-});
-
-// CUSTOMER CANCEL ORDER
+// Cancel Order
 app.post(
   "/customer/orders/cancel",
   requireRole("customer"),
   async (req, res) => {
-    const { order_id } = req.body; // get the order ID from the form
+    const { order_id } = req.body;
     const connection = await pool.promise().getConnection();
 
     try {
       await connection.beginTransaction();
 
-      // 1. Delete all items for this order first
       await connection.query("DELETE FROM order_items WHERE order_id = ?", [
         order_id,
       ]);
 
-      // 2. Delete the order itself
       await connection.query("DELETE FROM orders WHERE id = ?", [order_id]);
 
       await connection.commit();
@@ -407,106 +737,8 @@ app.post(
   }
 );
 
-// Customer Cart - Store cart items in session
-app.post("/customer/cart/add", requireRole("customer"), (req, res) => {
-  const { product_id, quantity } = req.body;
-  if (!req.session.cart) req.session.cart = [];
-  const existsIndex = req.session.cart.findIndex(
-    (item) => item.product_id == product_id
-  );
-  if (existsIndex >= 0) {
-    req.session.cart[existsIndex].quantity += parseInt(quantity);
-  } else {
-    req.session.cart.push({
-      product_id: parseInt(product_id),
-      quantity: parseInt(quantity),
-    });
-  }
-  res.redirect("/customer/cart");
-});
-
-app.get("/customer/cart", requireRole("customer"), (req, res) => {
-  if (!req.session.cart || req.session.cart.length === 0) {
-    return res.render("customer_cart", {
-      products: [],
-      message: "Cart is empty",
-    });
-  }
-  const ids = req.session.cart.map((item) => item.product_id);
-  pool.query(
-    `SELECT * FROM products WHERE id IN (${ids.join(",")})`,
-    (err, products) => {
-      if (err) return res.send("Error loading cart products");
-      const cartProducts = products.map((prod) => {
-        const item = req.session.cart.find((i) => i.product_id === prod.id);
-        return { ...prod, quantity_in_cart: item.quantity };
-      });
-      res.render("customer_cart", { products: cartProducts, message: null });
-    }
-  );
-});
-
-//seller product add route:
-// Seller Add Product page
-app.get("/seller/products/add", requireRole("seller"), async (req, res) => {
-  res.render("seller_add_product"); // Create this EJS view
-});
-
-// Seller Add Product POST
-app.post("/seller/products/add", requireRole("seller"), (req, res) => {
-  const { name, price, quantity } = req.body;
-  const seller_id = req.session.user.id;
-
-  pool.query(
-    "INSERT INTO products (name, price, quantity, seller_id) VALUES (?, ?, ?, ?)",
-    [name, price, quantity, seller_id],
-    (err) => {
-      if (err) return res.send("Error adding product: " + err.message);
-      res.redirect("/seller/products");
-    }
-  );
-});
-
-// Seller can see orders for their products
-app.get("/seller/orders", requireRole("seller"), (req, res) => {
-  const sellerId = req.session.user.id;
-
-  pool.query(
-    `SELECT o.id AS order_id, o.total, o.status, oi.product_id, oi.quantity, oi.price, p.name
-     FROM orders o
-     JOIN order_items oi ON o.id = oi.order_id
-     JOIN products p ON oi.product_id = p.id
-     WHERE p.seller_id = ?`,
-    [sellerId],
-    (err, results) => {
-      if (err) return res.send("Error fetching orders: " + err.message);
-
-      // Group items by order
-      const orders = {};
-      results.forEach((row) => {
-        if (!orders[row.order_id]) {
-          orders[row.order_id] = {
-            id: row.order_id,
-            total: row.total,
-            status: row.status,
-            items: [],
-          };
-        }
-        orders[row.order_id].items.push({
-          product_id: row.product_id,
-          name: row.name,
-          quantity: row.quantity,
-          price: row.price,
-        });
-      });
-
-      res.render("seller_orders", { orders: Object.values(orders) });
-    }
-  );
-});
-
 // SERVER
 const PORT = 3000;
 app.listen(PORT, () => {
-  console.log(`Server runnin at: http://localhost:${PORT}`);
+  console.log(`Server running at: http://localhost:${PORT}`);
 });

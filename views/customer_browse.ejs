@@ -3,8 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Dashboard - Shop Easy</title>
-    <link rel="stylesheet" href="/css/customer_browse.css">
+    <title>Browse Products - Shop Easy</title>
     <style>
       * {
         margin: 0;
@@ -97,9 +96,6 @@
         border-radius: 8px;
         transition: all 0.3s;
         font-size: 16px;
-        border: none;
-        width: 100%;
-        cursor: pointer;
       }
 
       .logout-btn:hover {
@@ -110,164 +106,200 @@
       .main-content {
         margin-left: 260px;
         flex: 1;
-        padding: 40px;
+        padding: 30px;
       }
 
-      .dashboard-header {
-        text-align: center;
-        color: white;
-        margin-bottom: 50px;
-      }
-
-      .dashboard-header h1 {
-        font-size: 42px;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 15px;
-      }
-
-      .dashboard-header p {
-        font-size: 18px;
-        opacity: 0.9;
-      }
-
-      .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 25px;
-        max-width: 1200px;
+      .container {
+        max-width: 1400px;
         margin: 0 auto;
-      }
-
-      .stat-card {
         background: white;
-        border-radius: 16px;
-        padding: 35px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        transition: all 0.3s;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
       }
 
-      .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+      .header {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e0e0e0;
       }
 
-      .stat-icon {
-        width: 70px;
-        height: 70px;
-        border-radius: 16px;
+      .header h1 {
+        color: #333;
+        font-size: 28px;
+      }
+
+      .search-filter-section {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+      }
+
+      .search-box {
         display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 36px;
+        gap: 10px;
         margin-bottom: 20px;
       }
 
-      .stat-icon.purple {
-        background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
-      }
-
-      .stat-icon.pink {
-        background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
-      }
-
-      .stat-icon.green {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      }
-
-      .stat-icon.teal {
-        background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
-      }
-
-      .stat-label {
-        font-size: 14px;
-        color: #6b7280;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 10px;
-        font-weight: 600;
-      }
-
-      .stat-value {
-        font-size: 42px;
-        font-weight: bold;
-        color: #1f2937;
-        line-height: 1;
-      }
-
-      .action-buttons {
-        display: flex;
-        justify-content: center;
-        gap: 20px;
-        margin-top: 50px;
-        flex-wrap: wrap;
-      }
-
-      .action-btn {
-        padding: 15px 35px;
-        border-radius: 10px;
-        text-decoration: none;
-        font-weight: 600;
+      .search-box input {
+        flex: 1;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
         font-size: 16px;
+      }
+
+      .search-box input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
         transition: all 0.3s;
-        display: inline-flex;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .filters {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        align-items: end;
+      }
+
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .filter-group label {
+        margin-bottom: 5px;
+        color: #555;
+        font-weight: 500;
+        font-size: 14px;
+      }
+
+      .filter-group input,
+      .filter-group select {
+        padding: 10px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+      }
+
+      .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 25px;
+        margin-top: 30px;
+      }
+
+      .product-card {
+        background: white;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 20px;
+        transition: all 0.3s;
+      }
+
+      .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        border-color: #667eea;
+      }
+
+      .product-image {
+        width: 100%;
+        height: 200px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 8px;
+        display: flex;
         align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 48px;
+        margin-bottom: 15px;
+      }
+
+      .product-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 10px;
+      }
+
+      .product-price {
+        font-size: 24px;
+        color: #667eea;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+
+      .product-stock {
+        color: #28a745;
+        font-size: 14px;
+        margin-bottom: 15px;
+      }
+
+      .add-to-cart-form {
+        display: flex;
         gap: 10px;
       }
 
-      .action-btn.primary {
-        background: white;
-        color: #667eea;
-        box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
+      .add-to-cart-form input {
+        width: 60px;
+        padding: 8px;
+        border: 2px solid #ddd;
+        border-radius: 6px;
+        text-align: center;
       }
 
-      .action-btn.primary:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 30px rgba(255, 255, 255, 0.4);
-      }
-
-      .action-btn.secondary {
-        background: rgba(255, 255, 255, 0.2);
+      .add-to-cart-form button {
+        flex: 1;
+        padding: 10px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        border: 2px solid white;
-      }
-
-      .action-btn.secondary:hover {
-        background: white;
-        color: #667eea;
-        transform: translateY(-3px);
-      }
-
-      .floating-actions {
-        position: fixed;
-        right: 30px;
-        bottom: 30px;
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        z-index: 1000;
-      }
-
-      .fab {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        background: white;
-        color: #667eea;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-decoration: none;
-        font-size: 24px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
         transition: all 0.3s;
       }
 
-      .fab:hover {
-        transform: scale(1.1) rotate(10deg);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      .add-to-cart-form button:hover {
+        transform: scale(1.05);
+      }
+
+      .no-products {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+      }
+
+      .no-products h2 {
+        font-size: 24px;
+        margin-bottom: 10px;
+      }
+
+      .results-count {
+        color: #666;
+        margin-bottom: 20px;
+        font-size: 16px;
       }
 
       @media (max-width: 768px) {
@@ -277,15 +309,7 @@
 
         .main-content {
           margin-left: 200px;
-          padding: 20px;
-        }
-
-        .dashboard-header h1 {
-          font-size: 32px;
-        }
-
-        .stats-grid {
-          grid-template-columns: 1fr;
+          padding: 15px;
         }
       }
 
@@ -308,6 +332,7 @@
     </style>
   </head>
   <body>
+    <!-- Sidebar -->
     <aside class="sidebar">
       <div class="logo">
         <h2>🛒 SHOP EASY</h2>
@@ -360,6 +385,7 @@
       </div>
     </aside>
 
+    <!-- Main Content -->
     <main class="main-content">
       <div class="container">
         <div class="header">
@@ -490,10 +516,5 @@
         <% } %>
       </div>
     </main>
-
-    <div class="floating-actions">
-      <a href="/customer/cart" class="fab" title="Cart">🛒</a>
-      <a href="/customer/browse" class="fab" title="Browse">🔍</a>
-    </div>
   </body>
 </html>
