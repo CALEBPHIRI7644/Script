@@ -3,11 +3,551 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Cart - Customer Dashboard</title>
-    <link rel="stylesheet" href="/css/customer_cart.css" />
+    <title>My Cart - Shop Easy</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+      }
+
+      .sidebar {
+        width: 260px;
+        background: #2c3e50;
+        min-height: 100vh;
+        padding: 20px 0;
+        position: fixed;
+        left: 0;
+        top: 0;
+        animation: slideInLeft 0.5s ease-out;
+      }
+
+      @keyframes slideInLeft {
+        from {
+          transform: translateX(-100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      .logo {
+        padding: 0 20px 30px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: white;
+        font-size: 22px;
+        font-weight: bold;
+        animation: fadeInDown 0.6s ease-out 0.2s both;
+      }
+
+      @keyframes fadeInDown {
+        from {
+          transform: translateY(-20px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .logo-icon {
+        font-size: 28px;
+        animation: bounce 2s infinite;
+      }
+
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      .nav {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px 20px;
+        color: #bdc3c7;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        animation: fadeInLeft 0.5s ease-out backwards;
+      }
+
+      .nav-item:nth-child(1) {
+        animation-delay: 0.3s;
+      }
+      .nav-item:nth-child(2) {
+        animation-delay: 0.4s;
+      }
+      .nav-item:nth-child(3) {
+        animation-delay: 0.5s;
+      }
+      .nav-item:nth-child(4) {
+        animation-delay: 0.6s;
+      }
+
+      @keyframes fadeInLeft {
+        from {
+          transform: translateX(-30px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      .nav-item::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 0;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.05);
+        transition: width 0.3s ease;
+      }
+
+      .nav-item:hover::before {
+        width: 100%;
+      }
+
+      .nav-item:hover {
+        color: white;
+        transform: translateX(5px);
+      }
+
+      .nav-item.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-left: 4px solid #fff;
+      }
+
+      .nav-icon {
+        font-size: 20px;
+        transition: transform 0.3s ease;
+      }
+
+      .nav-item:hover .nav-icon {
+        transform: scale(1.2) rotate(5deg);
+      }
+
+      .logout-btn {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px 20px;
+        background: #e74c3c;
+        color: white;
+        border: none;
+        width: calc(100% - 40px);
+        margin: 20px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        animation: fadeIn 0.5s ease-out 0.7s both;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .logout-btn:hover {
+        background: #c0392b;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+      }
+
+      .main-content {
+        margin-left: 260px;
+        flex: 1;
+        padding: 40px;
+        animation: fadeInUp 0.6s ease-out 0.3s both;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          transform: translateY(30px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        color: white;
+      }
+
+      .header h1 {
+        font-size: 36px;
+        animation: slideInRight 0.6s ease-out 0.4s both;
+      }
+
+      @keyframes slideInRight {
+        from {
+          transform: translateX(50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      .notification-icon {
+        width: 45px;
+        height: 45px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+        }
+        50% {
+          transform: scale(1.05);
+          box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+        }
+      }
+
+      .notification-icon:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(15deg);
+      }
+
+      .alert {
+        background: #fff;
+        color: #2c3e50;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border-left: 4px solid #667eea;
+        animation: slideInDown 0.5s ease-out;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      @keyframes slideInDown {
+        from {
+          transform: translateY(-20px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .cart-container {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        animation: scaleIn 0.5s ease-out 0.5s both;
+      }
+
+      @keyframes scaleIn {
+        from {
+          transform: scale(0.9);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .empty-cart {
+        text-align: center;
+        padding: 60px 20px;
+        animation: fadeIn 0.8s ease-out;
+      }
+
+      .empty-cart-icon {
+        font-size: 80px;
+        margin-bottom: 20px;
+        animation: swing 2s ease-in-out infinite;
+      }
+
+      @keyframes swing {
+        0%,
+        100% {
+          transform: rotate(-10deg);
+        }
+        50% {
+          transform: rotate(10deg);
+        }
+      }
+
+      .empty-cart h2 {
+        color: #2c3e50;
+        margin-bottom: 10px;
+      }
+
+      .empty-cart p {
+        color: #7f8c8d;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+      }
+
+      tbody tr {
+        border-bottom: 1px solid #ecf0f1;
+        transition: all 0.3s ease;
+        animation: fadeInUp 0.5s ease-out backwards;
+      }
+
+      tbody tr:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+      tbody tr:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      tbody tr:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+      tbody tr:nth-child(4) {
+        animation-delay: 0.4s;
+      }
+      tbody tr:nth-child(5) {
+        animation-delay: 0.5s;
+      }
+      tbody tr:nth-child(6) {
+        animation-delay: 0.6s;
+      }
+
+      tbody tr:hover {
+        background: #f8f9fa;
+        transform: scale(1.01);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      td {
+        padding: 20px 15px;
+      }
+
+      .product-name {
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      .price {
+        color: #667eea;
+        font-weight: bold;
+        font-size: 18px;
+      }
+
+      input[type="number"] {
+        width: 70px;
+        padding: 8px;
+        border: 2px solid #e0e0e0;
+        border-radius: 6px;
+        margin-right: 10px;
+        transition: all 0.3s ease;
+      }
+
+      input[type="number"]:focus {
+        outline: none;
+        border-color: #667eea;
+        transform: scale(1.05);
+      }
+
+      .btn-update,
+      .btn-delete {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn-update {
+        background: #3498db;
+        color: white;
+      }
+
+      .btn-update::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+      }
+
+      .btn-update:hover::before {
+        width: 300px;
+        height: 300px;
+      }
+
+      .btn-update:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+      }
+
+      .btn-delete {
+        background: #e74c3c;
+        color: white;
+      }
+
+      .btn-delete:hover {
+        background: #c0392b;
+        transform: translateY(-2px) rotate(2deg);
+        box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+      }
+
+      .checkout-section {
+        margin-top: 30px;
+        text-align: right;
+        animation: fadeInUp 0.6s ease-out 0.6s both;
+      }
+
+      .btn-checkout {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 40px;
+        border: none;
+        border-radius: 10px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn-checkout::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.2);
+        transition: left 0.5s ease;
+      }
+
+      .btn-checkout:hover::before {
+        left: 100%;
+      }
+
+      .btn-checkout:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-checkout:active {
+        transform: translateY(-1px);
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          width: 200px;
+        }
+
+        .main-content {
+          margin-left: 200px;
+          padding: 20px;
+        }
+
+        .header h1 {
+          font-size: 28px;
+        }
+
+        table {
+          font-size: 14px;
+        }
+
+        th,
+        td {
+          padding: 10px;
+        }
+      }
+
+      @media (max-width: 576px) {
+        .sidebar {
+          width: 100%;
+          position: relative;
+          min-height: auto;
+        }
+
+        .main-content {
+          margin-left: 0;
+        }
+
+        table {
+          display: block;
+          overflow-x: auto;
+        }
+      }
+    </style>
   </head>
   <body>
-    <!-- Sidebar -->
     <div class="sidebar">
       <div class="logo">
         <div class="logo-icon">🛒</div>
@@ -41,7 +581,6 @@
       </form>
     </div>
 
-    <!-- Main Content -->
     <div class="main-content">
       <div class="header">
         <h1>My Shopping Cart</h1>
@@ -76,7 +615,11 @@
             <tr>
               <td class="product-name"><%= item.name %></td>
               <td>
-                <form action="/customer/cart/update" method="POST">
+                <form
+                  action="/customer/cart/update"
+                  method="POST"
+                  style="display: flex; align-items: center"
+                >
                   <input
                     type="hidden"
                     name="product_id"
@@ -91,7 +634,7 @@
                   <button type="submit" class="btn-update">Update</button>
                 </form>
               </td>
-              <td class="price">$<%= item.price %></td>
+              <td class="price">$<%= parseFloat(item.price).toFixed(2) %></td>
               <td>
                 <form action="/customer/cart/remove" method="POST">
                   <input
