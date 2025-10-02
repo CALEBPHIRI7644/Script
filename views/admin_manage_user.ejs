@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manage Users - Admin Dashboard</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="/css/admnMusers.css">
+  <style>
+  
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar mobile-hidden" id="sidebar">
+      <div class="brand">
+        <span class="logo" aria-hidden="true"></span>
+        <div>
+          <div class="title">We Shop Admin <span class="pro">PRO</span></div>
+          <div class="muted" style="font-size:0.85rem;margin-top:4px">Manage your store</div>
+        </div>
+      </div>
+
+      <nav class="side-nav" aria-label="Main navigation">
+        <a href="/admin/dashboard"><span class="icon"><i class="fa-solid fa-tachometer-alt"></i></span> Dashboard</a>
+        <a href="/admin/products"><span class="icon"><i class="fa-solid fa-box"></i></span> Products</a>
+        <a href="/admin/orders"><span class="icon"><i class="fa-solid fa-cart-shopping"></i></span> Orders</a>
+        <a href="/admin/users" class="active"><span class="icon"><i class="fa-solid fa-users"></i></span> Manage Users</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        © <span id="year"></span> We Shop
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main-wrap">
+      <header class="topbar">
+        <div class="top-left">
+          <button class="hamburger" id="hamburger" title="Open menu">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+
+          <div class="heading">
+            <div class="brand">MyShop Admin</div>
+            <div class="subtitle muted">Manage Users</div>
+          </div>
+        </div>
+
+        <div class="top-actions">
+          <div class="search-field" role="search" aria-label="Search">
+            <i class="fa-solid fa-magnifying-glass muted"></i>
+            <input type="search" id="searchInput" placeholder="Search users..." />
+          </div>
+
+          <a href="/logout" class="btn-logout">Logout</a>
+          <div class="user-email"><%= user?.name %></div>
+        </div>
+      </header>
+
+      <main>
+        <div class="page-content">
+          <!-- Left: Users List -->
+          <div>
+            <% if (typeof success !== 'undefined' && success) { %>
+              <div class="alert success">
+                <i class="fa-solid fa-check-circle"></i> <%= success %>
+              </div>
+            <% } %>
+            <% if (typeof error !== 'undefined' && error) { %>
+              <div class="alert error">
+                <i class="fa-solid fa-exclamation-circle"></i> <%= error %>
+              </div>
+            <% } %>
+
+            <div class="table-card">
+              <div class="header">
+                <span>All Users</span>
+                <span class="muted"><%= users.length %> users</span>
+              </div>
+              <div style="overflow:auto;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="usersTable">
+                    <% if (users.length === 0) { %>
+                      <tr>
+                        <td colspan="4" style="text-align:center;color:#64748b;padding:40px;">
+                          No users found
+                        </td>
+                      </tr>
+                    <% } else { %>
+                      <% users.forEach(u => { %>
+                        <tr class="user-row">
+                          <td><%= u.name %></td>
+                          <td><%= u.email %></td>
+                          <td>
+                            <span class="role-badge <%= u.role %>"><%= u.role %></span>
+                          </td>
+                          <td>
+                            <form method="POST" action="/admin/users/delete" style="display:inline;">
+                              <input type="hidden" name="user_id" value="<%= u.id %>">
+                              <button type="submit" class="btn-delete" onclick="return confirm('Are you sure you want to delete this user?')">
+                                <i class="fa-solid fa-trash"></i> Delete
+                              </button>
+                            </form>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Add User Form + Stats -->
+          <aside>
+            <!-- Stats Cards -->
+            <div class="stats-cards">
+              <div class="stat-card customers">
+                <div class="content">
+                  <h3>Total Customers</h3>
+                  <div class="value"><%= totalCustomers %></div>
+                </div>
+                <div class="icon-box">
+                  <i class="fa-solid fa-user"></i>
+                </div>
+              </div>
+
+              <div class="stat-card sellers">
+                <div class="content">
+                  <h3>Total Sellers</h3>
+                  <div class="value"><%= totalSellers %></div>
+                </div>
+                <div class="icon-box">
+                  <i class="fa-solid fa-store"></i>
+                </div>
+              </div>
+
+              <div class="stat-card admins">
+                <div class="content">
+                  <h3>Total Admins</h3>
+                  <div class="value"><%= totalAdmins %></div>
+                </div>
+                <div class="icon-box">
+                  <i class="fa-solid fa-user-shield"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Add User Form -->
+            <div class="form-card" style="margin-top: 18px;">
+              <h2><i class="fa-solid fa-user-plus"></i> Add New User</h2>
+
+              <form method="POST" action="/admin/users/add">
+                <div class="form-group">
+                  <label for="name">Full Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    id="name"
+                    placeholder="John Doe"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="email">Email Address</label>
+                  <input
+                    type="email"
+                    name="email"
+                    id="email"
+                    placeholder="user@example.com"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="password">Password</label>
+                  <input
+                    type="password"
+                    name="password"
+                    id="password"
+                    placeholder="Create a password"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="role">Select Role</label>
+                  <select name="role" id="role" required>
+                    <option value="customer" selected>Customer</option>
+                    <option value="seller">Seller</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                  <div class="role-info">
+                    Choose the role that best describes this user's permissions
+                  </div>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                  <i class="fa-solid fa-plus"></i> Create User
+                </button>
+              </form>
+            </div>
+          </aside>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // Fill year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Mobile sidebar toggle
+    const sidebar = document.getElementById('sidebar');
+    const hamburger = document.getElementById('hamburger');
+    hamburger.addEventListener('click', () => {
+      if (sidebar.classList.contains('mobile-hidden')) {
+        sidebar.classList.remove('mobile-hidden');
+        sidebar.style.position = 'fixed';
+        sidebar.style.left = '12px';
+        sidebar.style.top = '12px';
+        sidebar.style.zIndex = 60;
+        sidebar.style.height = 'calc(100vh - 24px)';
+      } else {
+        sidebar.classList.add('mobile-hidden');
+        sidebar.style.position = '';
+        sidebar.style.left = '';
+        sidebar.style.top = '';
+        sidebar.style.zIndex = '';
+      }
+    });
+
+    function handleResize() {
+      if (window.innerWidth > 1000) {
+        sidebar.classList.remove('mobile-hidden');
+        sidebar.style.position = 'sticky';
+      } else {
+        sidebar.classList.add('mobile-hidden');
+      }
+    }
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      const rows = document.querySelectorAll('.user-row');
+      
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(query) ? '' : 'none';
+      });
+    });
+
+    // Auto-hide alerts after 5 seconds
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+      setTimeout(() => {
+        alert.style.opacity = '0';
+        setTimeout(() => alert.remove(), 300);
+      }, 5000);
+    });
+  </script>
+</body>
+</html>

@@ -1,20 +1,106 @@
-<h2>All Orders</h2>
-<table border="1">
-  <tr>
-    <th>ID</th>
-    <th>Customer ID</th>
-    <th>Product ID</th>
-    <th>Quantity</th>
-    <th>Status</th>
-  </tr>
-  <% orders.forEach(o => { %>
-  <tr>
-    <td><%= o.id %></td>
-    <td><%= o.customer_id %></td>
-    <td><%= o.product_id %></td>
-    <td><%= o.quantity %></td>
-    <td><%= o.status %></td>
-  </tr>
-  <% }) %>
-</table>
-<a href="/logout">Logout</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Orders</title>
+  <link rel="stylesheet" href="/css/adminOrders.css">
+  <style>
+    
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">We Shop Admin</div>
+      <a href="/logout" class="logout-btn">Logout</a>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <nav>
+        <a href="/admin/dashboard">Dashboard</a>
+        <a href="/admin/products">Products</a>
+        <a href="/admin/orders" class="active">Orders</a>
+        <a href="/admin/users">Users</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <h2 class="page-title">All Orders</h2>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Orders</div>
+          <div class="stat-value"><%= orders.length %></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pending</div>
+          <div class="stat-value"><%= orders.filter(o => o.status === 'pending').length %></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Processing</div>
+          <div class="stat-value"><%= orders.filter(o => o.status === 'processing').length %></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Delivered</div>
+          <div class="stat-value"><%= orders.filter(o => o.status === 'delivered').length %></div>
+        </div>
+      </div>
+
+      <!-- Orders Table -->
+      <div class="table-container">
+        <% if (orders.length > 0) { %>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer ID</th>
+                <th>Product ID</th>
+                <th>Quantity</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% orders.forEach(o => { %>
+              <tr>
+                <td>#<%= o.id %></td>
+                <td><%= o.customer_id %></td>
+                <td><%= o.product_id %></td>
+                <td><%= o.quantity %></td>
+                <td>
+                  <span class="status-badge status-<%= o.status %>">
+                    <%= o.status %>
+                  </span>
+                </td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <% } else { %>
+        <div class="empty-state">
+          <div class="empty-state-icon">📦</div>
+          <div class="empty-state-title">No Orders Yet</div>
+          <p class="empty-state-text">Orders will appear here once customers start placing them.</p>
+        </div>
+        <% } %>
+      </div>
+
+    </main>
+  </div>
+
+</body>
+</html>

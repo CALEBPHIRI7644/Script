@@ -1,7 +1,264 @@
-<h1>Admin Dashboard</h1>
-<ul>
-  <li><a href="/admin/products">Manage Products</a></li>
-  <li><a href="/admin/products/admin_add_product">Add Product</a></li>
-  <li><a href="/admin/orders">Manage Orders</a></li>
-</ul>
-<a href="/logout">Logout</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Font Awesome (free) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/css/admnDash.css">
+</head>
+<body>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar mobile-hidden" id="sidebar">
+      <div class="brand">
+        <span class="logo" aria-hidden="true"></span>
+        <div>
+          <div class="title">We Shop Admin <span class="pro">PRO</span></div>
+          <div class="muted" style="font-size:0.85rem;margin-top:4px">Manage your store</div>
+        </div>
+      </div>
+
+      <nav class="side-nav" aria-label="Main navigation">
+        <a href="/admin/dashboard" class="active"><span class="icon"><i class="fa-solid fa-tachometer-alt"></i></span> Dashboard</a>
+        <a href="/admin/products"><span class="icon"><i class="fa-solid fa-box"></i></span> Products</a>
+        <a href="/admin/orders"><span class="icon"><i class="fa-solid fa-cart-shopping"></i></span> Orders</a>
+        <a href="/admin/users"><span class="icon"><i class="fa-solid fa-users"></i></span>Manage Users</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        © <span id="year"></span> We Shop
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main-wrap">
+      <header class="topbar">
+        <div class="top-left">
+          <button class="hamburger" id="hamburger" title="Open menu">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+
+          <div class="heading">
+            <div class="brand">MyShop Admin</div>
+            <div class="subtitle muted">Dashboard</div>
+          </div>
+        </div>
+
+        <div class="top-actions">
+          <div class="search-field" role="search" aria-label="Search">
+            <i class="fa-solid fa-magnifying-glass muted"></i>
+            <input type="search" placeholder="Search orders, products..." />
+          </div>
+
+          <a href="/logout" class="btn-logout">Logout</a>
+          <div class="user-email"><%= user?.name %></div>
+        </div>
+      </header>
+
+      <main>
+        <!-- Top cards -->
+        <section class="cards" aria-label="Key metrics">
+          <% [
+            ['Sales', '$' + Number(cards.totalSales).toLocaleString(), '+12%'],
+            ['Orders', cards.totalOrders, '+6%'],
+            ['Pending Orders', cards.pendingOrders, '-8%'],
+            ['Products', cards.totalProducts, ''],
+            ['Customers', cards.totalCustomers, '+3%'],
+            ['Sellers', cards.totalSellers, '']
+          ].forEach(([label, value, delta]) => { %>
+            <div class="card">
+              <div class="label"><%= label %></div>
+              <div class="value"><%= value %></div>
+              <% if(delta){ %><div class="mini"><%= delta %> vs last month</div><% } %>
+            </div>
+          <% }) %>
+        </section>
+
+        <!-- Content: charts + right column -->
+        <div class="content" style="margin-top:14px;">
+          <div>
+            <div class="chart-box" style="margin-bottom:14px;">
+              <h3>Sales (last 12 months)</h3>
+              <canvas id="salesChart" class="chart-canvas"></canvas>
+            </div>
+
+            <div class="chart-box" style="margin-bottom:14px;">
+              <h3>Customer Growth</h3>
+              <canvas id="customersChart" class="chart-canvas"></canvas>
+            </div>
+
+            <div style="height:12px"></div>
+
+            <!-- Recent orders table -->
+            <div class="table-box" style="margin-top:12px;">
+              <div class="header">Recent Orders</div>
+              <div style="overflow:auto;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Order #</th>
+                      <th>Customer</th>
+                      <th>Total</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% recentOrders.forEach(o => { %>
+                      <tr>
+                        <td><%= o.id %></td>
+                        <td><%= o.customer %></td>
+                        <td>MK<%= Number(o.total).toLocaleString() %></td>
+                        <td>
+                          <span class="status <%= o.status==='Pending' ? 'pending' : o.status==='Shipped' ? 'shipped' : 'completed' %>">
+                            <%= o.status %>
+                          </span>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right column -->
+          <aside class="right-column" aria-label="Summary">
+            <div class="summary-box">
+              <h3>Users</h3>
+              <ul class="summary-list">
+                <li><span>Customers</span><span><%= cards.totalCustomers %></span></li>
+                <li><span>Sellers</span><span><%= cards.totalSellers %></span></li>
+              </ul>
+            </div>
+
+            <div class="chart-box" style="padding:12px;">
+              <h3>Quick Stats</h3>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+                <div style="display:flex;justify-content:space-between"><div class="muted">Active Users</div><div style="font-weight:700">26K</div></div>
+                <div style="display:flex;justify-content:space-between"><div class="muted">Conversion</div><div style="font-weight:700">2.49%</div></div>
+                <div style="display:flex;justify-content:space-between"><div class="muted">Avg Order</div><div style="font-weight:700">MK42.80</div></div>
+              </div>
+            </div>
+
+          </aside>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // fill year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Mobile sidebar toggle
+    const sidebar = document.getElementById('sidebar');
+    const hamburger = document.getElementById('hamburger');
+    hamburger.addEventListener('click', () => {
+      if (sidebar.classList.contains('mobile-hidden')) {
+        sidebar.classList.remove('mobile-hidden');
+        sidebar.style.position = 'fixed';
+        sidebar.style.left = '12px';
+        sidebar.style.top = '12px';
+        sidebar.style.zIndex = 60;
+        sidebar.style.height = 'calc(100vh - 24px)';
+      } else {
+        sidebar.classList.add('mobile-hidden');
+        sidebar.style.position = '';
+        sidebar.style.left = '';
+        sidebar.style.top = '';
+        sidebar.style.zIndex = '';
+      }
+    });
+
+    // Resize listener to ensure sidebar visible on large screens
+    function handleResize() {
+      if (window.innerWidth > 1000) {
+        sidebar.classList.remove('mobile-hidden');
+        sidebar.style.position = 'sticky';
+      } else {
+        sidebar.classList.add('mobile-hidden');
+      }
+    }
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    // Chart.js data from server (EJS variables preserved)
+    const labels = <%- JSON.stringify(charts?.labels || []) %>;
+    const salesSeries = <%- JSON.stringify(charts?.salesSeries || []) %>;
+    const customerSeries = <%- JSON.stringify(charts?.customerSeries || []) %>;
+
+    // Sales line chart
+    new Chart(document.getElementById('salesChart'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Sales',
+          data: salesSeries,
+          borderWidth: 2,
+          tension: 0.3,
+          pointRadius: 3,
+          fill: true,
+          backgroundColor: 'rgba(99,102,241,0.08)',
+          borderColor: 'rgba(99,102,241,1)'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#64748b' } },
+          y: { ticks: { color: '#64748b' } }
+        }
+      }
+    });
+
+    // Customers bar chart
+    new Chart(document.getElementById('customersChart'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Customers',
+          data: customerSeries,
+          borderRadius: 6,
+          barThickness: 14,
+          backgroundColor: 'rgba(59,130,246,0.95)'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display:false }, ticks: { color: '#64748b' } },
+          y: { ticks: { color: '#64748b' } }
+        }
+      }
+    });
+
+  </script>
+
+  <script>
+  const searchInput = document.querySelector('.search-field input');
+  const tableRows = document.querySelectorAll('tbody tr');
+
+  searchInput.addEventListener('input', () => {
+    const query = searchInput.value.toLowerCase();
+
+    tableRows.forEach(row => {
+      const rowText = row.textContent.toLowerCase();
+      row.style.display = rowText.includes(query) ? '' : 'none';
+    });
+  });
+  </script>
+
+</body>
+</html>

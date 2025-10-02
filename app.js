@@ -14,7 +14,7 @@ const pool = mysql2.createPool({
   host: "localhost",
   user: "root",
   database: "shopping",
-  password: "",
+  password: "", 
 });
 
 // Express session
@@ -130,8 +130,83 @@ app.get("/logout", (req, res) => {
 
 // ADMIN ROUTES
 
-app.get("/admin/dashboard", requireRole("admin"), (req, res) => {
-  res.render("admin_dashboard", { user: req.session.user });
+app.get("/admin/dashboard", requireRole("admin"), async (req, res) => {
+  try {
+    // Get total sales
+    const [salesResult] = await pool
+      .promise()
+      .query("SELECT COALESCE(SUM(total), 0) AS totalSales FROM orders");
+
+    // Get total orders
+    const [ordersResult] = await pool
+      .promise()
+      .query("SELECT COUNT(*) AS totalOrders FROM orders");
+
+    // Get pending orders
+    const [pendingResult] = await pool
+      .promise()
+      .query("SELECT COUNT(*) AS pendingOrders FROM orders WHERE status = 'Pending'");
+
+    // Get delivered orders
+    const [deliveredResult] = await pool
+      .promise()
+      .query("SELECT COUNT(*) AS deliveredOrders FROM orders WHERE status = 'Delivered'");
+
+    // Get total products
+    const [productsResult] = await pool
+      .promise()
+      .query("SELECT COUNT(*) AS totalProducts FROM products");
+
+    // Get total customers
+    const [customersResult] = await pool
+      .promise()
+      .query("SELECT COUNT(*) AS totalCustomers FROM users WHERE role = 'customer'");
+
+    // Get total sellers
+    const [sellersResult] = await pool
+      .promise()
+      .query("SELECT COUNT(*) AS totalSellers FROM users WHERE role = 'seller'");
+
+    // Get recent orders with customer info
+    const [recentOrders] = await pool
+      .promise()
+      .query(`
+        SELECT o.id, o.total, o.status,
+               u.name AS customer
+        FROM orders o
+        LEFT JOIN users u ON o.customer_id = u.id
+        ORDER BY o.id DESC
+        LIMIT 10
+      `);
+
+    // Prepare chart data (last 12 months - dummy data for now, you can calculate real data)
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const charts = {
+      labels: months,
+      salesSeries: [1200, 1900, 3000, 5000, 2300, 3200, 4100, 3800, 4500, 5200, 6000, 7200],
+      customerSeries: [45, 52, 49, 60, 58, 65, 70, 68, 75, 80, 85, 90]
+    };
+
+    const cards = {
+      totalSales: salesResult[0].totalSales || 0,
+      totalOrders: ordersResult[0].totalOrders || 0,
+      pendingOrders: pendingResult[0].pendingOrders || 0,
+      deliveredOrders: deliveredResult[0].deliveredOrders || 0,
+      totalProducts: productsResult[0].totalProducts || 0,
+      totalCustomers: customersResult[0].totalCustomers || 0,
+      totalSellers: sellersResult[0].totalSellers || 0,
+    };
+
+    res.render("admin_dashboard", { 
+      user: req.session.user,
+      cards: cards,
+      recentOrders: recentOrders,
+      charts: charts
+    });
+  } catch (err) {
+    console.error("Error loading admin dashboard:", err);
+    res.send("Error loading dashboard: " + err.message);
+  }
 });
 
 app.get("/admin/products", requireRole("admin"), (req, res) => {
@@ -159,6 +234,89 @@ app.get("/admin/orders", requireRole("admin"), (req, res) => {
       user: req.session.user,
     });
   });
+});
+
+// Admin Manage Users - FIXED: removed created_at column
+app.get("/admin/users", requireRole("admin"), async (req, res) => {
+  try {
+    // Get all users (removed created_at since it doesn't exist in the table)
+    const [users] = await pool
+      .promise()
+      .query("SELECT id, name, email, role FROM users ORDER BY id DESC");
+
+    // Get user counts by role
+    const [customerCount] = await pool
+      .promise()
+      .query("SELECT COUNT(*) AS count FROM users WHERE role = 'customer'");
+
+    const [sellerCount] = await pool
+      .promise()
+      .query("SELECT COUNT(*) AS count FROM users WHERE role = 'seller'");
+
+    const [adminCount] = await pool
+      .promise()
+      .query("SELECT COUNT(*) AS count FROM users WHERE role = 'admin'");
+
+    res.render("admin_manage_user", {
+      user: req.session.user,
+      users: users,
+      totalCustomers: customerCount[0].count,
+      totalSellers: sellerCount[0].count,
+      totalAdmins: adminCount[0].count
+    });
+  } catch (err) {
+    console.error("Error loading manage users:", err);
+    res.send("Error loading page: " + err.message);
+  }
+});
+
+// Admin Add User (POST)
+app.post("/admin/users/add", requireRole("admin"), async (req, res) => {
+  const { name, email, password, role } = req.body;
+
+  if (!name || !email || !password || !role) {
+    return res.redirect("/admin/users?error=All fields are required");
+  }
+
+  try {
+    // Check if email already exists
+    const [existing] = await pool
+      .promise()
+      .query("SELECT * FROM users WHERE email = ?", [email]);
+    
+    if (existing.length > 0) {
+      return res.redirect("/admin/users?error=Email already exists");
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await pool
+      .promise()
+      .query(
+        "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
+        [name, email, hashedPassword, role]
+      );
+
+    res.redirect("/admin/users?success=User added successfully");
+  } catch (err) {
+    console.error("Error adding user:", err);
+    res.redirect("/admin/users?error=" + err.message);
+  }
+});
+
+// Admin Delete User (POST)
+app.post("/admin/users/delete", requireRole("admin"), async (req, res) => {
+  const { user_id } = req.body;
+
+  try {
+    await pool
+      .promise()
+      .query("DELETE FROM users WHERE id = ?", [user_id]);
+
+    res.redirect("/admin/users?success=User deleted successfully");
+  } catch (err) {
+    console.error("Error deleting user:", err);
+    res.redirect("/admin/users?error=" + err.message);
+  }
 });
 
 // Admin Add Product GET
@@ -327,7 +485,6 @@ app.get("/customer/dashboard", requireRole("customer"), async (req, res) => {
       products,
       hasSavedCart: savedCart.length > 0,
       currentPage: "dashboard",
-      // ADDED THESE MISSING VARIABLES:
       searchQuery: "",
       sortBy: "newest",
       minPrice: "",
