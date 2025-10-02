@@ -7,9 +7,9 @@ seller_products.ejs
 seller_update_product.ejs
 seller_dashboard.ejs
 node_modules/
-app.js
 node_modules
 customer_cart.ejs
 customer_checkout.ejs
 customer_orders.ejs
 customer_dashboard.ejs
+customer_browse.ejs
