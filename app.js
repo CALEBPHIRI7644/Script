@@ -14,7 +14,7 @@ const pool = mysql2.createPool({
   host: "localhost",
   user: "root",
   database: "shopping",
-  password: "", 
+  password: "abcabc12345Abdul", 
 });
 
 // Express session
