@@ -17,7 +17,7 @@ const pool = mysql2.createPool({
   host: "localhost",
   user: "root",
   database: "shopping",
-  password: "abcabc12345Abdul", 
+  password: "abcabc12345Abdul",
 });
 
 // Express session
@@ -33,7 +33,6 @@ app.use(
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadDir = path.join(__dirname, 'public/uploads');
-    // Create directory if it doesn't exist
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -47,7 +46,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: function (req, file, cb) {
     const filetypes = /jpeg|jpg|png|gif|webp/;
     const mimetype = filetypes.test(file.mimetype);
@@ -72,14 +71,12 @@ function requireRole(role) {
 
 // ROUTES
 
-// Landing Page - Public route
+// Landing Page
 app.get("/", async (req, res) => {
   try {
     const [latestProducts] = await pool
       .promise()
-      .query(
-        "SELECT * FROM products WHERE quantity > 0 ORDER BY id DESC LIMIT 4"
-      );
+      .query("SELECT * FROM products WHERE quantity > 0 ORDER BY id DESC LIMIT 4");
 
     const [allProducts] = await pool
       .promise()
@@ -165,52 +162,42 @@ app.get("/logout", (req, res) => {
 // ADMIN ROUTES
 app.get("/admin/dashboard", requireRole("admin"), async (req, res) => {
   try {
-    // Get total sales
     const [salesResult] = await pool
       .promise()
       .query("SELECT COALESCE(SUM(total), 0) AS totalSales FROM orders");
 
-    // Get total orders
     const [ordersResult] = await pool
       .promise()
       .query("SELECT COUNT(*) AS totalOrders FROM orders");
 
-    // Get pending orders
     const [pendingResult] = await pool
       .promise()
       .query("SELECT COUNT(*) AS pendingOrders FROM orders WHERE status = 'Pending'");
 
-    // Get delivered orders
     const [deliveredResult] = await pool
       .promise()
       .query("SELECT COUNT(*) AS deliveredOrders FROM orders WHERE status = 'Delivered'");
 
-    // Get total products
     const [productsResult] = await pool
       .promise()
       .query("SELECT COUNT(*) AS totalProducts FROM products");
 
-    // Get total customers
     const [customersResult] = await pool
       .promise()
       .query("SELECT COUNT(*) AS totalCustomers FROM users WHERE role = 'customer'");
 
-    // Get total sellers
     const [sellersResult] = await pool
       .promise()
       .query("SELECT COUNT(*) AS totalSellers FROM users WHERE role = 'seller'");
 
-    // Get recent orders with customer info
-    const [recentOrders] = await pool
-      .promise()
-      .query(`
-        SELECT o.id, o.total, o.status,
-               COALESCE(u.name, 'Guest') AS customer
-        FROM orders o
-        LEFT JOIN users u ON o.customer_id = u.id
-        ORDER BY o.id DESC
-        LIMIT 10
-      `);
+    const [recentOrders] = await pool.promise().query(`
+      SELECT o.id, o.total, o.status,
+             COALESCE(u.name, 'Guest') AS customer
+      FROM orders o
+      LEFT JOIN users u ON o.customer_id = u.id
+      ORDER BY o.id DESC
+      LIMIT 10
+    `);
 
     // Calculate sales by month for the last 12 months
     const [monthlySales] = await pool
@@ -246,20 +233,17 @@ app.get("/admin/dashboard", requireRole("admin"), async (req, res) => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentMonth = new Date().getMonth();
     
-    // Create ordered array of last 12 months
     const last12Months = [];
     for (let i = 0; i < 12; i++) {
       const monthIndex = (currentMonth - 11 + i + 12) % 12;
       last12Months.push(months[monthIndex]);
     }
 
-    // Map sales data to last 12 months
     const salesSeries = last12Months.map(month => {
       const data = monthlySales.find(m => m.month === month);
       return data ? parseFloat(data.total) : 0;
     });
 
-    // Map customer data to last 12 months
     const customerSeries = last12Months.map(month => {
       const data = monthlyCustomers.find(m => m.month === month);
       return data ? parseInt(data.count) : 0;
@@ -281,11 +265,11 @@ app.get("/admin/dashboard", requireRole("admin"), async (req, res) => {
       totalSellers: sellersResult[0].totalSellers || 0,
     };
 
-    res.render("admin_dashboard", { 
+    res.render("admin_dashboard", {
       user: req.session.user,
       cards: cards,
       recentOrders: recentOrders,
-      charts: charts
+      charts: charts,
     });
   } catch (err) {
     console.error("Error loading admin dashboard:", err);
@@ -313,7 +297,7 @@ app.get("/admin/products", requireRole("admin"), (req, res) => {
   );
 });
 
-// Admin Edit Product (POST) - with image upload
+// Admin Edit Product
 app.post('/admin/products/edit/:id', requireRole('admin'), upload.single('image'), async (req, res) => {
   try {
     const productId = req.params.id;
@@ -321,28 +305,22 @@ app.post('/admin/products/edit/:id', requireRole('admin'), upload.single('image'
     
     let imagePath;
     
-    // Get current product to check existing image
     const [currentProduct] = await pool.promise().query(
       'SELECT image FROM products WHERE id = ?', 
       [productId]
     );
     
-    // Determine which image to use
     const imageType = req.body.imageType || 'upload';
     
     if (imageType === 'url' && imageUrl && imageUrl.trim() !== '') {
-      // Using URL - extract just the filename or use full URL
       if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-        // It's a full URL, store just the filename part
         imagePath = imageUrl.split('/').pop();
       } else {
         imagePath = imageUrl;
       }
     } else if (req.file) {
-      // New file uploaded
       imagePath = req.file.filename;
       
-      // Delete old image file if it exists and is a local file
       if (currentProduct[0] && currentProduct[0].image) {
         const oldImagePath = path.join(__dirname, 'public/uploads', currentProduct[0].image);
         if (fs.existsSync(oldImagePath)) {
@@ -354,11 +332,9 @@ app.post('/admin/products/edit/:id', requireRole('admin'), upload.single('image'
         }
       }
     } else {
-      // Keep existing image
       imagePath = currentProduct[0].image;
     }
     
-    // Update product in database
     await pool.promise().query(
       'UPDATE products SET name = ?, price = ?, quantity = ?, image = ? WHERE id = ?',
       [name, price, quantity, imagePath, productId]
@@ -371,12 +347,11 @@ app.post('/admin/products/edit/:id', requireRole('admin'), upload.single('image'
   }
 });
 
-// Admin Delete Product (POST) - AJAX version
+// Admin Delete Product
 app.post('/admin/products/delete/:id', requireRole('admin'), async (req, res) => {
   try {
     const productId = req.params.id;
     
-    // Get product info before deleting
     const [product] = await pool.promise().query(
       'SELECT image FROM products WHERE id = ?', 
       [productId]
@@ -386,10 +361,8 @@ app.post('/admin/products/delete/:id', requireRole('admin'), async (req, res) =>
       return res.status(404).json({ error: 'Product not found' });
     }
     
-    // Delete the product from database
     await pool.promise().query('DELETE FROM products WHERE id = ?', [productId]);
     
-    // Delete associated image file if it exists
     if (product[0].image) {
       const imagePath = path.join(__dirname, 'public/uploads', product[0].image);
       if (fs.existsSync(imagePath)) {
@@ -397,7 +370,6 @@ app.post('/admin/products/delete/:id', requireRole('admin'), async (req, res) =>
           fs.unlinkSync(imagePath);
         } catch (err) {
           console.error('Error deleting image file:', err);
-          // Don't fail the request if image deletion fails
         }
       }
     }
@@ -409,6 +381,7 @@ app.post('/admin/products/delete/:id', requireRole('admin'), async (req, res) =>
   }
 });
 
+// Admin View Orders
 app.get("/admin/orders", requireRole("admin"), (req, res) => {
   pool.query("SELECT * FROM orders", (err, results) => {
     if (err) return res.send("Error fetching orders");
@@ -419,15 +392,63 @@ app.get("/admin/orders", requireRole("admin"), (req, res) => {
   });
 });
 
+// Admin Update Order Status
+app.post("/admin/orders/update/:id", requireRole("admin"), async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ error: 'Status is required' });
+    }
+
+    const validStatuses = ['Pending', 'Shipped', 'Delivered'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    await pool
+      .promise()
+      .query("UPDATE orders SET status = ? WHERE id = ?", [status, orderId]);
+
+    res.json({ success: true, message: 'Order status updated successfully' });
+  } catch (err) {
+    console.error("Error updating order:", err);
+    res.status(500).json({ error: 'Failed to update order: ' + err.message });
+  }
+});
+
+// Admin Delete Order
+app.post("/admin/orders/delete/:id", requireRole("admin"), async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const connection = await pool.promise().getConnection();
+
+    try {
+      await connection.beginTransaction();
+      await connection.query("DELETE FROM order_items WHERE order_id = ?", [orderId]);
+      await connection.query("DELETE FROM orders WHERE id = ?", [orderId]);
+      await connection.commit();
+      res.json({ success: true, message: 'Order deleted successfully' });
+    } catch (err) {
+      await connection.rollback();
+      throw err;
+    } finally {
+      connection.release();
+    }
+  } catch (err) {
+    console.error("Error deleting order:", err);
+    res.status(500).json({ error: 'Failed to delete order: ' + err.message });
+  }
+});
+
 // Admin Manage Users
 app.get("/admin/users", requireRole("admin"), async (req, res) => {
   try {
-    // Get all users
     const [users] = await pool
       .promise()
       .query("SELECT id, name, email, role FROM users ORDER BY id DESC");
 
-    // Get user counts by role
     const [customerCount] = await pool
       .promise()
       .query("SELECT COUNT(*) AS count FROM users WHERE role = 'customer'");
@@ -445,7 +466,7 @@ app.get("/admin/users", requireRole("admin"), async (req, res) => {
       users: users,
       totalCustomers: customerCount[0].count,
       totalSellers: sellerCount[0].count,
-      totalAdmins: adminCount[0].count
+      totalAdmins: adminCount[0].count,
     });
   } catch (err) {
     console.error("Error loading manage users:", err);
@@ -453,7 +474,6 @@ app.get("/admin/users", requireRole("admin"), async (req, res) => {
   }
 });
 
-// Admin Add User (POST)
 app.post("/admin/users/add", requireRole("admin"), async (req, res) => {
   const { name, email, password, role } = req.body;
 
@@ -462,11 +482,10 @@ app.post("/admin/users/add", requireRole("admin"), async (req, res) => {
   }
 
   try {
-    // Check if email already exists
     const [existing] = await pool
       .promise()
       .query("SELECT * FROM users WHERE email = ?", [email]);
-    
+
     if (existing.length > 0) {
       return res.redirect("/admin/users?error=Email already exists");
     }
@@ -486,7 +505,7 @@ app.post("/admin/users/add", requireRole("admin"), async (req, res) => {
   }
 });
 
-// Admin Edit User (POST)
+// Admin Edit User
 app.post("/admin/users/edit", requireRole("admin"), async (req, res) => {
   const { user_id, name, email, role, password } = req.body;
 
@@ -495,7 +514,6 @@ app.post("/admin/users/edit", requireRole("admin"), async (req, res) => {
   }
 
   try {
-    // Check if email already exists for another user
     const [existing] = await pool
       .promise()
       .query("SELECT * FROM users WHERE email = ? AND id != ?", [email, user_id]);
@@ -504,7 +522,6 @@ app.post("/admin/users/edit", requireRole("admin"), async (req, res) => {
       return res.redirect("/admin/users?error=Email already exists");
     }
 
-    // If password is provided, hash it and update with password
     if (password && password.trim() !== '') {
       const hashedPassword = await bcrypt.hash(password, 10);
       await pool
@@ -514,7 +531,6 @@ app.post("/admin/users/edit", requireRole("admin"), async (req, res) => {
           [name, email, role, hashedPassword, user_id]
         );
     } else {
-      // Update without changing password
       await pool
         .promise()
         .query(
@@ -530,15 +546,12 @@ app.post("/admin/users/edit", requireRole("admin"), async (req, res) => {
   }
 });
 
-// Admin Delete User (POST)
+// Admin Delete User
 app.post("/admin/users/delete", requireRole("admin"), async (req, res) => {
   const { user_id } = req.body;
 
   try {
-    await pool
-      .promise()
-      .query("DELETE FROM users WHERE id = ?", [user_id]);
-
+    await pool.promise().query("DELETE FROM users WHERE id = ?", [user_id]);
     res.redirect("/admin/users?success=User deleted successfully");
   } catch (err) {
     console.error("Error deleting user:", err);
@@ -546,64 +559,220 @@ app.post("/admin/users/delete", requireRole("admin"), async (req, res) => {
   }
 });
 
-// Admin Add Product GET
-app.get(
-  "/admin/products/admin_add_product",
-  requireRole("admin"),
-  async (req, res) => {
-    try {
-      const [users] = await pool
-        .promise()
-        .query("SELECT id, name, email, role FROM users");
-      res.render("admin_add_product", {
-        users,
-        user: req.session.user,
-      });
-    } catch (err) {
-      console.error(err);
-      res.send("Error loading users");
-    }
+app.get("/admin/products/admin_add_product", requireRole("admin"), async (req, res) => {
+  try {
+    const [users] = await pool
+      .promise()
+      .query("SELECT id, name, email, role FROM users");
+    res.render("admin_add_product", {
+      users,
+      user: req.session.user,
+    });
+  } catch (err) {
+    console.error(err);
+    res.send("Error loading users");
   }
-);
+});
 
-// Admin Add Product POST - Updated with image upload
-app.post(
-  "/admin/products/admin_add_product",
-  requireRole("admin"),
-  upload.single('image'),
-  (req, res) => {
-    const { name, price, quantity, seller_id, imageUrl } = req.body;
+// Admin Add Product
+app.post("/admin/products/admin_add_product", requireRole("admin"), upload.single('image'), (req, res) => {
+  const { name, price, quantity, seller_id, imageUrl } = req.body;
 
-    if (!name || !price || !quantity || !seller_id) {
-      return res.send("Name, price, quantity, and seller are required");
-    }
-
-    let imagePath = null;
-    
-    // Check if file was uploaded or URL provided
-    if (req.file) {
-      imagePath = req.file.filename;
-    } else if (imageUrl && imageUrl.trim() !== '') {
-      imagePath = imageUrl.split('/').pop(); // Get filename from URL
-    }
-
-    pool.query(
-      "INSERT INTO products (name, price, quantity, seller_id, image) VALUES (?, ?, ?, ?, ?)",
-      [name, price, quantity, seller_id, imagePath],
-      (err) => {
-        if (err) return res.send("Error adding product: " + err.message);
-        res.redirect("/admin/products");
-      }
-    );
+  if (!name || !price || !quantity || !seller_id) {
+    return res.send("Name, price, quantity, and seller are required");
   }
-);
+
+  let imagePath = null;
+  
+  if (req.file) {
+    imagePath = req.file.filename;
+  } else if (imageUrl && imageUrl.trim() !== '') {
+    imagePath = imageUrl.split('/').pop();
+  }
+
+  pool.query(
+    "INSERT INTO products (name, price, quantity, seller_id, image) VALUES (?, ?, ?, ?, ?)",
+    [name, price, quantity, seller_id, imagePath],
+    (err) => {
+      if (err) return res.send("Error adding product: " + err.message);
+      res.redirect("/admin/products");
+    }
+  );
+});
 
 // SELLER ROUTES
 
-app.get("/seller/dashboard", requireRole("seller"), (req, res) => {
-  res.render("seller_dashboard", { user: req.session.user });
+// Seller Dashboard - Enhanced
+app.get("/seller/dashboard", requireRole("seller"), async (req, res) => {
+  try {
+    const sellerId = req.session.user.id;
+
+    const [products] = await pool
+      .promise()
+      .query("SELECT * FROM products WHERE seller_id = ?", [sellerId]);
+
+    const [salesResult] = await pool
+      .promise()
+      .query(`
+        SELECT COALESCE(SUM(oi.quantity * oi.price), 0) AS totalSales
+        FROM order_items oi
+        JOIN products p ON oi.product_id = p.id
+        WHERE p.seller_id = ?
+      `, [sellerId]);
+
+    const [ordersResult] = await pool
+      .promise()
+      .query(`
+        SELECT COUNT(DISTINCT o.id) AS totalOrders
+        FROM orders o
+        JOIN order_items oi ON o.id = oi.order_id
+        JOIN products p ON oi.product_id = p.id
+        WHERE p.seller_id = ?
+      `, [sellerId]);
+
+    const [pendingResult] = await pool
+      .promise()
+      .query(`
+        SELECT COUNT(DISTINCT o.id) AS pendingOrders
+        FROM orders o
+        JOIN order_items oi ON o.id = oi.order_id
+        JOIN products p ON oi.product_id = p.id
+        WHERE p.seller_id = ? AND o.status = 'Pending'
+      `, [sellerId]);
+
+    const [deliveredResult] = await pool
+      .promise()
+      .query(`
+        SELECT COUNT(DISTINCT o.id) AS deliveredOrders
+        FROM orders o
+        JOIN order_items oi ON o.id = oi.order_id
+        JOIN products p ON oi.product_id = p.id
+        WHERE p.seller_id = ? AND o.status = 'Delivered'
+      `, [sellerId]);
+
+    const [recentOrders] = await pool
+      .promise()
+      .query(`
+        SELECT o.id AS order_id, o.status, o.customer_id,
+               u.name AS customer_name,
+               oi.quantity, oi.price,
+               p.name AS product_name,
+               (oi.quantity * oi.price) AS item_total
+        FROM orders o
+        JOIN order_items oi ON o.id = oi.order_id
+        JOIN products p ON oi.product_id = p.id
+        LEFT JOIN users u ON o.customer_id = u.id
+        WHERE p.seller_id = ?
+        ORDER BY o.id DESC
+        LIMIT 10
+      `, [sellerId]);
+
+    const [topProducts] = await pool
+      .promise()
+      .query(`
+        SELECT p.name, COALESCE(SUM(oi.quantity), 0) AS total_sold
+        FROM products p
+        LEFT JOIN order_items oi ON p.id = oi.product_id
+        WHERE p.seller_id = ?
+        GROUP BY p.id, p.name
+        ORDER BY total_sold DESC
+        LIMIT 5
+      `, [sellerId]);
+
+    const totalProducts = products.length;
+    const lowStockProducts = products.filter(p => p.quantity < 5).length;
+    const inStockProducts = products.filter(p => p.quantity > 0).length;
+    const totalOrders = ordersResult[0].totalOrders || 0;
+    const avgOrderValue = totalOrders > 0 ? salesResult[0].totalSales / totalOrders : 0;
+
+    const [itemsSoldResult] = await pool
+      .promise()
+      .query(`
+        SELECT COALESCE(SUM(oi.quantity), 0) AS totalItemsSold
+        FROM order_items oi
+        JOIN products p ON oi.product_id = p.id
+        WHERE p.seller_id = ?
+      `, [sellerId]);
+
+    const [monthlySales] = await pool
+      .promise()
+      .query(`
+        SELECT 
+          DATE_FORMAT(o.created_at, '%b') as month,
+          COALESCE(SUM(oi.quantity * oi.price), 0) as total
+        FROM orders o
+        JOIN order_items oi ON o.id = oi.order_id
+        JOIN products p ON oi.product_id = p.id
+        WHERE p.seller_id = ? AND o.created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+        GROUP BY YEAR(o.created_at), MONTH(o.created_at), DATE_FORMAT(o.created_at, '%b')
+        ORDER BY YEAR(o.created_at), MONTH(o.created_at)
+      `, [sellerId]);
+
+    const [monthlyOrders] = await pool
+      .promise()
+      .query(`
+        SELECT 
+          DATE_FORMAT(o.created_at, '%b') as month,
+          COUNT(DISTINCT o.id) as count
+        FROM orders o
+        JOIN order_items oi ON o.id = oi.order_id
+        JOIN products p ON oi.product_id = p.id
+        WHERE p.seller_id = ? AND o.created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+        GROUP BY YEAR(o.created_at), MONTH(o.created_at), DATE_FORMAT(o.created_at, '%b')
+        ORDER BY YEAR(o.created_at), MONTH(o.created_at)
+      `, [sellerId]);
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentMonth = new Date().getMonth();
+    
+    const last12Months = [];
+    for (let i = 0; i < 12; i++) {
+      const monthIndex = (currentMonth - 11 + i + 12) % 12;
+      last12Months.push(months[monthIndex]);
+    }
+
+    const salesSeries = last12Months.map(month => {
+      const data = monthlySales.find(m => m.month === month);
+      return data ? parseFloat(data.total) : 0;
+    });
+
+    const ordersSeries = last12Months.map(month => {
+      const data = monthlyOrders.find(m => m.month === month);
+      return data ? parseInt(data.count) : 0;
+    });
+
+    const charts = {
+      labels: last12Months,
+      salesSeries: salesSeries,
+      ordersSeries: ordersSeries
+    };
+
+    const cards = {
+      totalSales: salesResult[0].totalSales || 0,
+      totalProducts: totalProducts,
+      totalOrders: totalOrders,
+      pendingOrders: pendingResult[0].pendingOrders || 0,
+      deliveredOrders: deliveredResult[0].deliveredOrders || 0,
+      lowStockProducts: lowStockProducts,
+      inStockProducts: inStockProducts,
+      avgOrderValue: avgOrderValue,
+      totalItemsSold: itemsSoldResult[0].totalItemsSold || 0
+    };
+
+    res.render("seller_dashboard", {
+      user: req.session.user,
+      cards: cards,
+      recentOrders: recentOrders,
+      topProducts: topProducts,
+      charts: charts
+    });
+  } catch (err) {
+    console.error("Error loading seller dashboard:", err);
+    res.send("Error loading dashboard: " + err.message);
+  }
 });
 
+// Seller Products
 app.get("/seller/products", requireRole("seller"), (req, res) => {
   pool.query(
     "SELECT * FROM products WHERE seller_id=?",
@@ -623,7 +792,7 @@ app.get("/seller/products/add", requireRole("seller"), (req, res) => {
   res.render("seller_add_product", { user: req.session.user });
 });
 
-// Seller Add Product POST - Updated with image upload
+// Seller Add Product POST
 app.post("/seller/products/add", requireRole("seller"), upload.single('image'), (req, res) => {
   const { name, price, quantity, imageUrl } = req.body;
   const seller_id = req.session.user.id;
@@ -633,11 +802,16 @@ app.post("/seller/products/add", requireRole("seller"), upload.single('image'), 
   }
 
   let imagePath = null;
+  const imageType = req.body.imageType || 'upload';
   
-  if (req.file) {
+  if (imageType === 'url' && imageUrl && imageUrl.trim() !== '') {
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      imagePath = imageUrl.split('/').pop();
+    } else {
+      imagePath = imageUrl;
+    }
+  } else if (req.file) {
     imagePath = req.file.filename;
-  } else if (imageUrl && imageUrl.trim() !== '') {
-    imagePath = imageUrl.split('/').pop();
   }
 
   pool.query(
@@ -691,6 +865,35 @@ app.get("/seller/orders", requireRole("seller"), (req, res) => {
   );
 });
 
+// Seller Update Order Status
+app.post("/seller/orders/update", requireRole("seller"), async (req, res) => {
+  try {
+    const { order_id, status } = req.body;
+    
+    const [verification] = await pool.promise().query(`
+      SELECT DISTINCT o.id 
+      FROM orders o
+      JOIN order_items oi ON o.id = oi.order_id
+      JOIN products p ON oi.product_id = p.id
+      WHERE o.id = ? AND p.seller_id = ?
+    `, [order_id, req.session.user.id]);
+    
+    if (verification.length === 0) {
+      return res.send("Unauthorized");
+    }
+    
+    await pool.promise().query(
+      "UPDATE orders SET status = ? WHERE id = ?",
+      [status, order_id]
+    );
+    
+    res.redirect("/seller/orders");
+  } catch (err) {
+    console.error("Error updating order:", err);
+    res.send("Error updating order: " + err.message);
+  }
+});
+
 // CUSTOMER ROUTES
 
 // Customer Dashboard
@@ -698,7 +901,6 @@ app.get("/customer/dashboard", requireRole("customer"), async (req, res) => {
   try {
     const customerId = req.session.user.id;
 
-    // Get order statistics
     const [orders] = await pool
       .promise()
       .query("SELECT * FROM orders WHERE customer_id = ?", [customerId]);
@@ -713,12 +915,10 @@ app.get("/customer/dashboard", requireRole("customer"), async (req, res) => {
       0
     );
 
-    // Get some featured products
     const [products] = await pool
       .promise()
       .query("SELECT * FROM products WHERE quantity > 0 LIMIT 8");
 
-    // Check for saved cart
     const [savedCart] = await pool
       .promise()
       .query("SELECT * FROM saved_carts WHERE customer_id = ?", [customerId]);
@@ -751,7 +951,8 @@ app.get("/customer/browse", requireRole("customer"), async (req, res) => {
     const minPrice = parseFloat(req.query.min_price) || 0;
     const maxPrice = parseFloat(req.query.max_price) || 999999;
 
-    let query = "SELECT * FROM products WHERE quantity > 0";
+    let query =
+      "SELECT id, name, price, quantity, image, seller_id FROM products WHERE quantity > 0";
     const params = [];
 
     if (searchQuery) {
@@ -802,7 +1003,7 @@ app.get("/customer/browse", requireRole("customer"), async (req, res) => {
   }
 });
 
-// Quick search API endpoint (for autocomplete)
+// Quick search API endpoint
 app.get("/api/search", requireRole("customer"), async (req, res) => {
   try {
     const query = req.query.q || "";
@@ -866,7 +1067,6 @@ app.get("/customer/cart", requireRole("customer"), async (req, res) => {
   }
 });
 
-// Save current cart to database
 app.post("/customer/cart/save", requireRole("customer"), async (req, res) => {
   if (!req.session.cart || req.session.cart.length === 0) {
     return res.redirect("/customer/cart?message=Cart is empty");
@@ -903,7 +1103,6 @@ app.post("/customer/cart/save", requireRole("customer"), async (req, res) => {
   }
 });
 
-// Load saved cart
 app.post("/customer/cart/load", requireRole("customer"), async (req, res) => {
   try {
     const customerId = req.session.user.id;
@@ -926,7 +1125,6 @@ app.post("/customer/cart/load", requireRole("customer"), async (req, res) => {
   }
 });
 
-// Delete saved cart
 app.post(
   "/customer/cart/delete-saved",
   requireRole("customer"),
@@ -946,7 +1144,6 @@ app.post(
   }
 );
 
-// Add to Cart
 app.post("/customer/cart/add", requireRole("customer"), (req, res) => {
   const { product_id, quantity } = req.body;
   if (!req.session.cart) req.session.cart = [];
@@ -966,7 +1163,6 @@ app.post("/customer/cart/add", requireRole("customer"), (req, res) => {
   res.redirect("/customer/cart");
 });
 
-// Remove from Cart
 app.post("/customer/cart/remove", requireRole("customer"), (req, res) => {
   const { product_id } = req.body;
   if (!req.session.cart) req.session.cart = [];
@@ -978,7 +1174,6 @@ app.post("/customer/cart/remove", requireRole("customer"), (req, res) => {
   res.redirect("/customer/cart");
 });
 
-// Update Cart Quantity
 app.post("/customer/cart/update", requireRole("customer"), (req, res) => {
   const { product_id, quantity } = req.body;
   if (!req.session.cart) req.session.cart = [];
@@ -993,7 +1188,6 @@ app.post("/customer/cart/update", requireRole("customer"), (req, res) => {
   res.redirect("/customer/cart");
 });
 
-// Checkout
 app.post(
   "/customer/cart/checkout",
   requireRole("customer"),
@@ -1061,7 +1255,6 @@ app.post(
   }
 );
 
-// Customer Orders
 app.get("/customer/orders", requireRole("customer"), (req, res) => {
   const customerId = req.session.user.id;
   const message = req.query.message || null;
@@ -1105,7 +1298,6 @@ app.get("/customer/orders", requireRole("customer"), (req, res) => {
   );
 });
 
-// Cancel Order
 app.post(
   "/customer/orders/cancel",
   requireRole("customer"),

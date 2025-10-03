@@ -234,6 +234,14 @@
         color: white;
         font-size: 48px;
         margin-bottom: 15px;
+        overflow: hidden;
+      }
+
+      .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
       }
 
       .product-name {
@@ -335,12 +343,12 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="logo">
-        <h2>🛒 SHOP EASY</h2>
+        <h2>SHOP EASY</h2>
       </div>
 
       <ul class="nav-menu">
         <li class="nav-item">
-          <a
+          
             href="/customer/dashboard"
             class="nav-link <%= currentPage === 'dashboard' ? 'active' : '' %>"
           >
@@ -349,7 +357,7 @@
           </a>
         </li>
         <li class="nav-item">
-          <a
+          
             href="/customer/cart"
             class="nav-link <%= currentPage === 'cart' ? 'active' : '' %>"
           >
@@ -358,7 +366,7 @@
           </a>
         </li>
         <li class="nav-item">
-          <a
+          
             href="/customer/orders"
             class="nav-link <%= currentPage === 'orders' ? 'active' : '' %>"
           >
@@ -367,7 +375,7 @@
           </a>
         </li>
         <li class="nav-item">
-          <a
+          
             href="/customer/browse"
             class="nav-link <%= currentPage === 'browse' ? 'active' : '' %>"
           >
@@ -389,7 +397,7 @@
     <main class="main-content">
       <div class="container">
         <div class="header">
-          <h1>🛍️ Browse Products</h1>
+          <h1>Browse Products</h1>
         </div>
 
         <div class="search-filter-section">
@@ -401,7 +409,7 @@
                 placeholder="Search for products..."
                 value="<%= searchQuery %>"
               />
-              <button type="submit" class="btn btn-primary">🔍 Search</button>
+              <button type="submit" class="btn btn-primary">Search</button>
             </div>
 
             <div class="filters">
@@ -474,16 +482,13 @@
             <div class="product-image">
               <% if (product.image) { %>
               <img
-                src="<%= product.image %>"
+                src="/uploads/<%= product.image %>"
                 alt="<%= product.name %>"
-                style="
-                  width: 100%;
-                  height: 100%;
-                  object-fit: cover;
-                  border-radius: 8px;
-                "
+                onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect fill=%22%23f7fafc%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2260%22 text-anchor=%22middle%22 dy=%22.3em%22%3E📦%3C/text%3E%3C/svg%3E';"
               />
-              <% } else { %> 🛍️ <% } %>
+              <% } else { %> 
+              🛍️ 
+              <% } %>
             </div>
             <div class="product-name"><%= product.name %></div>
             <div class="product-price">

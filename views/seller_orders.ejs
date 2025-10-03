@@ -1,33 +1,407 @@
-<h1>Orders for Your Products</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Seller - Orders</title>
 
-<% orders.forEach(order => { %>
-  <h2>Order #<%= order.id %> | Status: <%= order.status %> | Total: $<%= order.total %></h2>
-  <table border="1" cellpadding="5">
-    <tr>
-      <th>Product</th>
-      <th>Quantity</th>
-      <th>Price</th>
-    </tr>
-    <% order.items.forEach(item => { %>
-      <tr>
-        <td><%= item.name %></td>
-        <td><%= item.quantity %></td>
-        <td>$<%= item.price %></td>
-      </tr>
-    <% }) %>
-  </table>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/css/admnProducts.css">
+  <style>
+    .order-card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
 
-  <% if(order.status === 'Pending') { %>
-    <form action="/seller/orders/update" method="POST">
-      <input type="hidden" name="order_id" value="<%= order.id %>" />
-      <select name="status">
-        <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
-        <option value="Shipped">Shipped</option>
-        <option value="Delivered">Delivered</option>
-      </select>
-      <button type="submit">Update Status</button>
-    </form>
-  <% } %>
-  <hr />
-<% }) %>
-<a href="/seller/dashboard">Back to Dashboard</a>
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #f1f5f9;
+    }
+
+    .order-info {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .order-id {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .order-total {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #3b82f6;
+    }
+
+    .status {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .status.pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status.shipped {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .status.delivered {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+    }
+
+    .items-table th {
+      background: #f8fafc;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #475569;
+      font-size: 0.9rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .items-table td {
+      padding: 12px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+    }
+
+    .items-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .status-form {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      background: #f8fafc;
+      border-radius: 6px;
+    }
+
+    .status-form select {
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      flex: 1;
+      max-width: 200px;
+    }
+
+    .status-form select:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+
+    .btn-update {
+      padding: 8px 16px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-update:hover {
+      background: #2563eb;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      color: #cbd5e1;
+      margin-bottom: 16px;
+    }
+
+    .empty-state h3 {
+      font-size: 1.25rem;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      color: #94a3b8;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 8px 16px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+
+    .filter-btn:hover {
+      border-color: #3b82f6;
+      color: #3b82f6;
+    }
+
+    .filter-btn.active {
+      background: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+    }
+
+    @media (max-width: 768px) {
+      .order-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .items-table {
+        font-size: 0.85rem;
+      }
+
+      .items-table th,
+      .items-table td {
+        padding: 8px;
+      }
+
+      .status-form {
+        flex-direction: column;
+      }
+
+      .status-form select {
+        width: 100%;
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar mobile-hidden" id="sidebar">
+      <div class="brand">
+        <span class="logo" aria-hidden="true"></span>
+        <div>
+          <div class="title">EASY SHOP Seller <span class="pro"></span></div>
+          <div class="muted" style="font-size:0.85rem;margin-top:4px">Manage your store</div>
+        </div>
+      </div>
+
+      <nav class="side-nav" aria-label="Main navigation">
+        <a href="/seller/dashboard"><span class="icon"><i class="fa-solid fa-tachometer-alt"></i></span> Dashboard</a>
+        <a href="/seller/products"><span class="icon"><i class="fa-solid fa-box"></i></span> Products</a>
+        <a href="/seller/orders" class="active"><span class="icon"><i class="fa-solid fa-cart-shopping"></i></span> Orders</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        © <span id="year"></span> EASY SHOP
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main-wrap">
+      <header class="topbar">
+        <div class="top-left">
+          <button class="hamburger" id="hamburger" title="Open menu">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="heading">
+            <div class="brand">EASY SHOP Seller</div>
+            <div class="subtitle muted">Orders</div>
+          </div>
+        </div>
+
+        <div class="top-actions">
+          <a href="/logout" class="btn-logout">Logout</a>
+        </div>
+      </header>
+
+      <main>
+        <div class="table-box">
+          <div class="header page-header">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div class="page-title">My Orders</div>
+              <div class="muted" style="font-size:0.9rem"><%= orders.length %> total orders</div>
+            </div>
+            <div>
+              <a href="/seller/dashboard" class="add-btn" style="background:#64748b">
+                <i class="fa-solid fa-arrow-left" style="margin-right:6px"></i>Back
+              </a>
+            </div>
+          </div>
+
+          <!-- Filter Buttons -->
+          <div class="filter-bar">
+            <button class="filter-btn active" onclick="filterOrders('all')">
+              <i class="fa-solid fa-list"></i> All Orders
+            </button>
+            <button class="filter-btn" onclick="filterOrders('Pending')">
+              <i class="fa-solid fa-clock"></i> Pending
+            </button>
+            <button class="filter-btn" onclick="filterOrders('Shipped')">
+              <i class="fa-solid fa-truck"></i> Shipped
+            </button>
+            <button class="filter-btn" onclick="filterOrders('Delivered')">
+              <i class="fa-solid fa-check-circle"></i> Delivered
+            </button>
+          </div>
+
+          <!-- Orders List -->
+          <% if (orders.length > 0) { %>
+            <% orders.forEach(order => { %>
+              <div class="order-card" data-status="<%= order.status %>">
+                <div class="order-header">
+                  <div class="order-info">
+                    <div class="order-id">Order #<%= order.id %></div>
+                    <span class="status <%= order.status.toLowerCase() %>"><%= order.status %></span>
+                    <div class="order-total">Total: MK <%= Number(order.total).toFixed(2) %></div>
+                  </div>
+                </div>
+
+                <table class="items-table">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Quantity</th>
+                      <th>Price</th>
+                      <th>Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% order.items.forEach(item => { %>
+                      <tr>
+                        <td><%= item.name %></td>
+                        <td><%= item.quantity %></td>
+                        <td>MK <%= Number(item.price).toFixed(2) %></td>
+                        <td>MK <%= (item.quantity * item.price).toFixed(2) %></td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+
+                <% if(order.status === 'Pending') { %>
+                  <form action="/seller/orders/update" method="POST" class="status-form">
+                    <input type="hidden" name="order_id" value="<%= order.id %>" />
+                    <label style="font-weight:500;color:#475569;margin-right:8px">Update Status:</label>
+                    <select name="status" required>
+                      <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                      <option value="Shipped">Shipped</option>
+                      <option value="Delivered">Delivered</option>
+                    </select>
+                    <button type="submit" class="btn-update">
+                      <i class="fa-solid fa-check"></i> Update
+                    </button>
+                  </form>
+                <% } else { %>
+                  <div style="padding:12px;background:#f8fafc;border-radius:6px;color:#64748b;font-size:0.9rem">
+                    <i class="fa-solid fa-info-circle"></i> This order has been <%= order.status.toLowerCase() %>
+                  </div>
+                <% } %>
+              </div>
+            <% }) %>
+          <% } else { %>
+            <div class="empty-state">
+              <i class="fa-solid fa-box-open"></i>
+              <h3>No Orders Yet</h3>
+              <p>Orders for your products will appear here</p>
+            </div>
+          <% } %>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // Fill year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Mobile sidebar toggle
+    const sidebar = document.getElementById('sidebar');
+    const hamburger = document.getElementById('hamburger');
+    hamburger.addEventListener('click', () => {
+      if (sidebar.classList.contains('mobile-hidden')) {
+        sidebar.classList.remove('mobile-hidden');
+        sidebar.style.position = 'fixed';
+        sidebar.style.left = '12px';
+        sidebar.style.top = '12px';
+        sidebar.style.zIndex = 60;
+        sidebar.style.height = 'calc(100vh - 24px)';
+      } else {
+        sidebar.classList.add('mobile-hidden');
+        sidebar.style.position = '';
+        sidebar.style.left = '';
+        sidebar.style.top = '';
+        sidebar.style.zIndex = '';
+      }
+    });
+
+    function handleResize() {
+      if (window.innerWidth > 1000) {
+        sidebar.classList.remove('mobile-hidden');
+        sidebar.style.position = 'sticky';
+      } else {
+        sidebar.classList.add('mobile-hidden');
+      }
+    }
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    // Filter orders functionality
+    function filterOrders(status) {
+      const orderCards = document.querySelectorAll('.order-card');
+      const filterBtns = document.querySelectorAll('.filter-btn');
+      
+      // Update active button
+      filterBtns.forEach(btn => btn.classList.remove('active'));
+      event.target.closest('.filter-btn').classList.add('active');
+      
+      // Filter orders
+      orderCards.forEach(card => {
+        if (status === 'all') {
+          card.style.display = 'block';
+        } else {
+          if (card.dataset.status === status) {
+            card.style.display = 'block';
+          } else {
+            card.style.display = 'none';
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

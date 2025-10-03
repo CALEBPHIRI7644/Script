@@ -1,5 +1,289 @@
-<h1>Seller Dashboard</h1>
-<ul>
-  <li><a href="/seller/products">My Products</a></li>
-</ul>
-<a href="/logout">Logout</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Seller Dashboard</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/css/admnDash.css">
+</head>
+<body>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar mobile-hidden" id="sidebar">
+      <div class="brand">
+        <span class="logo" aria-hidden="true"></span>
+        <div>
+          <div class="title">EASY SHOP Seller <span class="pro"></span></div>
+          <div class="muted" style="font-size:0.85rem;margin-top:4px">Manage your store</div>
+        </div>
+      </div>
+
+      <nav class="side-nav" aria-label="Main navigation">
+        <a href="/seller/dashboard" class="active"><span class="icon"><i class="fa-solid fa-tachometer-alt"></i></span> Dashboard</a>
+        <a href="/seller/products"><span class="icon"><i class="fa-solid fa-box"></i></span> Products</a>
+        <a href="/seller/orders"><span class="icon"><i class="fa-solid fa-cart-shopping"></i></span> Orders</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        © <span id="year"></span> EASY SHOP
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main-wrap">
+      <header class="topbar">
+        <div class="top-left">
+          <button class="hamburger" id="hamburger" title="Open menu">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+
+          <div class="heading">
+            <div class="brand">EASY SHOP Seller</div>
+            <div class="subtitle muted">Dashboard</div>
+          </div>
+        </div>
+
+        <div class="top-actions">
+          <a href="/logout" class="btn-logout">Logout</a>
+          <div class="user-email"><%= user?.name %></div>
+        </div>
+      </header>
+
+      <main>
+        <!-- Top cards -->
+        <section class="cards" aria-label="Key metrics">
+          <div class="card">
+            <div class="label">Total Sales</div>
+            <div class="value">MK <%= Number(cards.totalSales).toLocaleString() %></div>
+            <div class="mini">All time revenue</div>
+          </div>
+          <div class="card">
+            <div class="label">My Products</div>
+            <div class="value"><%= cards.totalProducts %></div>
+            <div class="mini">Active listings</div>
+          </div>
+          <div class="card">
+            <div class="label">Total Orders</div>
+            <div class="value"><%= cards.totalOrders %></div>
+            <div class="mini">All orders</div>
+          </div>
+          <div class="card">
+            <div class="label">Pending Orders</div>
+            <div class="value"><%= cards.pendingOrders %></div>
+            <div class="mini">Need attention</div>
+          </div>
+          <div class="card">
+            <div class="label">Completed</div>
+            <div class="value"><%= cards.deliveredOrders %></div>
+            <div class="mini">Delivered orders</div>
+          </div>
+          <div class="card">
+            <div class="label">Low Stock</div>
+            <div class="value"><%= cards.lowStockProducts %></div>
+            <div class="mini">Items below 5</div>
+          </div>
+        </section>
+
+        <!-- Content: charts + right column -->
+        <div class="content" style="margin-top:14px;">
+          <div>
+            <div class="chart-box" style="margin-bottom:14px;">
+              <h3>Sales Overview (Last 12 Months)</h3>
+              <canvas id="salesChart" class="chart-canvas"></canvas>
+            </div>
+
+            <div class="chart-box" style="margin-bottom:14px;">
+              <h3>Orders Trend</h3>
+              <canvas id="ordersChart" class="chart-canvas"></canvas>
+            </div>
+
+            <!-- Recent orders table -->
+            <div class="table-box" style="margin-top:12px;">
+              <div class="header">Recent Orders</div>
+              <div style="overflow:auto;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Order #</th>
+                      <th>Customer</th>
+                      <th>Product</th>
+                      <th>Quantity</th>
+                      <th>Total</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% if (recentOrders.length > 0) { %>
+                      <% recentOrders.forEach(o => { %>
+                        <tr>
+                          <td>#<%= o.order_id %></td>
+                          <td><%= o.customer_name || 'N/A' %></td>
+                          <td><%= o.product_name %></td>
+                          <td><%= o.quantity %></td>
+                          <td>MK <%= Number(o.item_total).toFixed(2) %></td>
+                          <td>
+                            <span class="status <%= o.status==='Pending' ? 'pending' : o.status==='Shipped' ? 'shipped' : 'completed' %>">
+                              <%= o.status %>
+                            </span>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    <% } else { %>
+                      <tr>
+                        <td colspan="6" style="text-align:center;padding:2rem;color:#64748b">
+                          No orders yet
+                        </td>
+                      </tr>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right column -->
+          <aside class="right-column" aria-label="Summary">
+            <div class="summary-box">
+              <h3>Top Products</h3>
+              <ul class="summary-list">
+                <% topProducts.slice(0, 5).forEach(p => { %>
+                  <li>
+                    <span><%= p.name.substring(0, 20) %><%= p.name.length > 20 ? '...' : '' %></span>
+                    <span><%= p.total_sold || 0 %> sold</span>
+                  </li>
+                <% }) %>
+                <% if (topProducts.length === 0) { %>
+                  <li style="color:#64748b;text-align:center">No sales yet</li>
+                <% } %>
+              </ul>
+            </div>
+
+            <div class="chart-box" style="padding:12px;">
+              <h3>Quick Stats</h3>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+                <div style="display:flex;justify-content:space-between">
+                  <div class="muted">Avg Order Value</div>
+                  <div style="font-weight:700">MK <%= cards.avgOrderValue.toFixed(2) %></div>
+                </div>
+                <div style="display:flex;justify-content:space-between">
+                  <div class="muted">Products Sold</div>
+                  <div style="font-weight:700"><%= cards.totalItemsSold %></div>
+                </div>
+                <div style="display:flex;justify-content:space-between">
+                  <div class="muted">In Stock Items</div>
+                  <div style="font-weight:700"><%= cards.inStockProducts %></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="summary-box" style="margin-top:14px">
+              <h3>Quick Actions</h3>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+                <a href="/seller/products/add" style="padding:10px;background:#3b82f6;color:white;text-align:center;border-radius:6px;text-decoration:none;font-weight:500">
+                  <i class="fa-solid fa-plus"></i> Add New Product
+                </a>
+                <a href="/seller/products" style="padding:10px;background:#64748b;color:white;text-align:center;border-radius:6px;text-decoration:none;font-weight:500">
+                  <i class="fa-solid fa-box"></i> View All Products
+                </a>
+                <a href="/seller/orders" style="padding:10px;background:#10b981;color:white;text-align:center;border-radius:6px;text-decoration:none;font-weight:500">
+                  <i class="fa-solid fa-cart-shopping"></i> Manage Orders
+                </a>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    const sidebar = document.getElementById('sidebar');
+    const hamburger = document.getElementById('hamburger');
+    hamburger.addEventListener('click', () => {
+      if (sidebar.classList.contains('mobile-hidden')) {
+        sidebar.classList.remove('mobile-hidden');
+        sidebar.style.position = 'fixed';
+        sidebar.style.left = '12px';
+        sidebar.style.top = '12px';
+        sidebar.style.zIndex = 60;
+        sidebar.style.height = 'calc(100vh - 24px)';
+      } else {
+        sidebar.classList.add('mobile-hidden');
+        sidebar.style.position = '';
+        sidebar.style.left = '';
+        sidebar.style.top = '';
+        sidebar.style.zIndex = '';
+      }
+    });
+
+    function handleResize() {
+      if (window.innerWidth > 1000) {
+        sidebar.classList.remove('mobile-hidden');
+        sidebar.style.position = 'sticky';
+      } else {
+        sidebar.classList.add('mobile-hidden');
+      }
+    }
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    const labels = <%- JSON.stringify(charts?.labels || []) %>;
+    const salesSeries = <%- JSON.stringify(charts?.salesSeries || []) %>;
+    const ordersSeries = <%- JSON.stringify(charts?.ordersSeries || []) %>;
+
+    new Chart(document.getElementById('salesChart'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Sales',
+          data: salesSeries,
+          borderWidth: 2,
+          tension: 0.3,
+          pointRadius: 3,
+          fill: true,
+          backgroundColor: 'rgba(99,102,241,0.08)',
+          borderColor: 'rgba(99,102,241,1)'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#64748b' } },
+          y: { ticks: { color: '#64748b' } }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('ordersChart'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Orders',
+          data: ordersSeries,
+          borderRadius: 6,
+          barThickness: 14,
+          backgroundColor: 'rgba(59,130,246,0.95)'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display:false }, ticks: { color: '#64748b' } },
+          y: { ticks: { color: '#64748b' } }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

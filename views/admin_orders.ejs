@@ -5,11 +5,221 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin - Orders</title>
 
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="/css/admnProducts.css">
   <style>
-    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .stat-label {
+      color: #64748b;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.35rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .status-pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-shipped {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .status-delivered {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .edit-btn, .delete-btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      margin-right: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .edit-btn {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .edit-btn:hover {
+      background: #2563eb;
+    }
+
+    .delete-btn {
+      background: #ef4444;
+      color: white;
+    }
+
+    .delete-btn:hover {
+      background: #dc2626;
+    }
+
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+
+    .modal h3 {
+      margin-bottom: 1rem;
+      color: #1e293b;
+    }
+
+    .modal label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #334155;
+      font-weight: 500;
+    }
+
+    .modal select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      margin-top: 1.5rem;
+    }
+
+    .btn-cancel {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .btn-cancel:hover {
+      background: #e2e8f0;
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 2000;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .notification.success {
+      background: #d1fae5;
+      color: #065f46;
+      border-left: 4px solid #10b981;
+    }
+
+    .notification.error {
+      background: #fee2e2;
+      color: #991b1b;
+      border-left: 4px solid #ef4444;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+
+    .empty-state-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-state-text {
+      color: #64748b;
+    }
   </style>
 </head>
 <body>
@@ -105,7 +315,7 @@
                 <tr data-order-id="<%= o.id %>">
                   <td>#<%= o.id %></td>
                   <td><%= o.customer_id %></td>
-                  <td class="order-total">$<%= parseFloat(o.total).toFixed(2) %></td>
+                  <td class="order-total">MK <%= parseFloat(o.total).toFixed(2) %></td>
                   <td>
                     <span class="status-badge status-<%= o.status.toLowerCase() %>">
                       <%= o.status %>
@@ -190,10 +400,8 @@
   </div>
 
   <script>
-    // Fill year
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    // Mobile sidebar toggle
     const sidebar = document.getElementById('sidebar');
     const hamburger = document.getElementById('hamburger');
     hamburger.addEventListener('click', () => {
@@ -224,7 +432,6 @@
     window.addEventListener('resize', handleResize);
     handleResize();
 
-    // Search functionality
     const searchInput = document.getElementById('searchInput');
     const tableRows = document.querySelectorAll('#ordersTable tbody tr');
 
@@ -238,7 +445,6 @@
       });
     }
 
-    // Notification system
     function showNotification(message, type = 'success') {
       const notification = document.getElementById('notification');
       const messageEl = document.getElementById('notificationMessage');
@@ -252,27 +458,21 @@
       }, 3000);
     }
 
-    // Modal elements
     const editBackdrop = document.getElementById('editBackdrop');
     const deleteBackdrop = document.getElementById('deleteBackdrop');
-
     const editForm = document.getElementById('editForm');
     const editStatus = document.getElementById('editStatus');
     const editOrderId = document.getElementById('editOrderId');
     const editCancel = document.getElementById('editCancel');
-
     const deleteMsg = document.getElementById('deleteMsg');
     const deleteCancel = document.getElementById('deleteCancel');
     const deleteConfirm = document.getElementById('deleteConfirm');
 
     let currentDeleteId = null;
 
-    // Helpers to open/close modals
     function showModal(backdrop) {
       backdrop.style.display = 'flex';
       backdrop.setAttribute('aria-hidden', 'false');
-      const first = backdrop.querySelector('input, button, select, [tabindex="0"]');
-      if (first) first.focus();
       document.body.style.overflow = 'hidden';
     }
     
@@ -282,20 +482,16 @@
       document.body.style.overflow = '';
     }
 
-    // Edit button handlers
     document.querySelectorAll('.edit-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
         const status = btn.dataset.status || 'Pending';
-
         editStatus.value = status;
         editOrderId.value = id;
-
         showModal(editBackdrop);
       });
     });
 
-    // Edit form submission
     editForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
@@ -316,11 +512,7 @@
         if (response.ok) {
           showNotification('Order status updated successfully!', 'success');
           hideModal(editBackdrop);
-          
-          // Reload page to show updated data
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
+          setTimeout(() => window.location.reload(), 1000);
         } else {
           showNotification(result.error || 'Failed to update order', 'error');
         }
@@ -330,13 +522,11 @@
       }
     });
 
-    // Edit modal cancel/overlay handlers
     editCancel.addEventListener('click', () => hideModal(editBackdrop));
     editBackdrop.addEventListener('click', (e) => {
       if (e.target === editBackdrop) hideModal(editBackdrop);
     });
 
-    // Delete button handlers
     document.querySelectorAll('.delete-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         currentDeleteId = btn.dataset.id;
@@ -345,7 +535,6 @@
       });
     });
 
-    // Delete confirmation handler
     deleteConfirm.addEventListener('click', async () => {
       if (!currentDeleteId) return;
 
@@ -360,12 +549,16 @@
           showNotification('Order deleted successfully!', 'success');
           hideModal(deleteBackdrop);
           
-          // Remove the row from table
           const row = document.querySelector(`tr[data-order-id="${currentDeleteId}"]`);
           if (row) {
             row.style.transition = 'opacity 0.3s ease';
             row.style.opacity = '0';
-            setTimeout(() => row.remove(), 300);
+            setTimeout(() => {
+              row.remove();
+              if (document.querySelectorAll('#ordersTable tbody tr').length === 0) {
+                window.location.reload();
+              }
+            }, 300);
           }
           
           currentDeleteId = null;
@@ -378,7 +571,6 @@
       }
     });
 
-    // Delete cancel/overlay handlers
     deleteCancel.addEventListener('click', () => {
       hideModal(deleteBackdrop);
       currentDeleteId = null;
@@ -391,7 +583,6 @@
       }
     });
 
-    // Close modals with Escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         if (editBackdrop.style.display === 'flex') hideModal(editBackdrop);
