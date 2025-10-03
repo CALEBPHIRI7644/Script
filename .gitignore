@@ -1,14 +1,15 @@
 
-seller.ejs
-seller_add_product.ejs
-seller_orders.ejs
-seller_products.ejs
-seller_update_product.ejs
-seller_dashboard.ejs
+seller
+seller_add_product
+seller_orders
+seller_products
+seller_update_product
+seller_dashboard
 node_modules/
 node_modules
-customer_cart.ejs
-customer_checkout.ejs
-customer_orders.ejs
-customer_dashboard.ejs
-customer_browse.ejs
+customer_cart
+customer_checkout
+customer_orders
+customer_dashboard
+customer_browse
+register
